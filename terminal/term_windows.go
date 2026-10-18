@@ -86,7 +86,7 @@ func (t *Terminal) startPTY() (io.WriteCloser, io.Reader, io.Closer, error) {
 		if err != nil {
 			granio.LogError("Error waiting for terminal process", err)
 		} else {
-			t.exitStatus.Store(int32(ps.ExitCode() + 1))
+			t.exitStatus.Store(int64(ps.ExitCode()) + 1)
 		}
 		_ = pty.Close()
 	}()

@@ -7,12 +7,13 @@
       "path": "terminal",
       "history_merged": true,
       "previous_repository": "https://github.com/Uzer007-admin/granio-terminal",
-      "previous_repository_deleted": false,
-      "module": "github.com/Uzer007-admin/granio-x/terminal",
+      "previous_repository_deleted": true,
+      "module": "github.com/Uzer007-admin/granio-x",
       "separate_module": false,
       "license_files": [
         "LICENSE"
-      ]
+      ],
+      "import": "github.com/Uzer007-admin/granio-x/terminal"
     },
     {
       "source": "https://github.com/fyne-io/refyne",
@@ -20,13 +21,14 @@
       "path": "ui",
       "history_merged": true,
       "previous_repository": "https://github.com/Uzer007-admin/granio-ui",
-      "previous_repository_deleted": false,
-      "module": "github.com/Uzer007-admin/granio-x/ui",
+      "previous_repository_deleted": true,
+      "module": "github.com/Uzer007-admin/granio-x",
       "separate_module": false,
       "license_files": [
         "LICENSE",
         "AUTHORS"
-      ]
+      ],
+      "import": "github.com/Uzer007-admin/granio-x/ui"
     },
     {
       "source": "https://github.com/fyne-io/cloud",
@@ -34,12 +36,13 @@
       "path": "cloud",
       "history_merged": true,
       "previous_repository": "https://github.com/Uzer007-admin/granio-cloud",
-      "previous_repository_deleted": false,
-      "module": "github.com/Uzer007-admin/granio-x/cloud",
+      "previous_repository_deleted": true,
+      "module": "github.com/Uzer007-admin/granio-x",
       "separate_module": false,
       "license_files": [
         "LICENSE"
-      ]
+      ],
+      "import": "github.com/Uzer007-admin/granio-x/cloud"
     },
     {
       "source": "https://github.com/fyne-io/go-locale",
@@ -47,12 +50,13 @@
       "path": "locale",
       "history_merged": true,
       "previous_repository": "https://github.com/Uzer007-admin/granio-locale",
-      "previous_repository_deleted": false,
-      "module": "github.com/Uzer007-admin/granio-x/locale",
+      "previous_repository_deleted": true,
+      "module": "github.com/Uzer007-admin/granio-x",
       "separate_module": false,
       "license_files": [
         "LICENSE"
-      ]
+      ],
+      "import": "github.com/Uzer007-admin/granio-x/locale"
     }
   ]
 }

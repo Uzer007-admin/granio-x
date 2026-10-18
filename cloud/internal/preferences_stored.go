@@ -164,6 +164,9 @@ func (p *preferences) loadFromFile(path granio.URI) (err error) {
 	if closeErr != nil {
 		return closeErr
 	}
+	if values == nil {
+		values = make(map[string]interface{})
+	}
 	convertLists(values)
 
 	p.prefLock.Lock()

@@ -101,7 +101,7 @@ type Terminal struct {
 	printData              []byte
 	printer                Printer
 	cmd                    *exec.Cmd
-	exitStatus             atomic.Int32  // process exit code + 1; zero means not exited
+	exitStatus             atomic.Int64  // process exit code + 1; zero means not exited
 	dirWatchDone           chan struct{} // closed to stop checking the working directory of cmd
 	closeLock              sync.Mutex
 	connected, stopping    bool
@@ -448,7 +448,7 @@ func (t *Terminal) run() {
 				// wait for cmd (shell) to exit, populates ProcessState.ExitCode
 				_ = t.cmd.Wait()
 				if t.cmd.ProcessState != nil {
-					t.exitStatus.Store(int32(t.cmd.ProcessState.ExitCode() + 1))
+					t.exitStatus.Store(int64(t.cmd.ProcessState.ExitCode()) + 1)
 				}
 			}
 			if err == io.EOF || err.Error() == "EOF" {

@@ -38,6 +38,17 @@ func openTestPreferences(t *testing.T, uri granio.URI) *preferences {
 	return p
 }
 
+func TestPreferencesNullFileAllowsWrite(t *testing.T) {
+	filename := filepath.Join(t.TempDir(), "preferences.json")
+	if err := os.WriteFile(filename, []byte("null"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	p := openTestPreferences(t, storage.NewFileURI(filename))
+	assert.NoError(t, p.loadFromFile(p.file))
+	assert.NotPanics(t, func() { p.SetString("key", "value") })
+	assert.Equal(t, "value", p.String("key"))
+}
+
 func TestPreferences_Remove(t *testing.T) {
 	p := loadPreferences(t)
 	p.WriteValues(func(val map[string]interface{}) {

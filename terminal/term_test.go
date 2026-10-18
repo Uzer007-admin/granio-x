@@ -74,6 +74,9 @@ func testExitCodeN(t *testing.T, n int) {
 func TestExitCode01(t *testing.T) {
 	testExitCodeN(t, 0)
 	testExitCodeN(t, 1)
+	if runtime.GOOS == "windows" {
+		testExitCodeN(t, 2147483647)
+	}
 }
 
 func TestTerminal_Resize(t *testing.T) {
