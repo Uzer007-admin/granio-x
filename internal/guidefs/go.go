@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"fyne.io/fyne/v2"
+	"github.com/Uzer007-admin/granio/v2"
 )
 
 // GoString generates Go code for the given type and object
-func GoString(clazz string, obj fyne.CanvasObject, c Context, defs map[string]string) string {
+func GoString(clazz string, obj granio.CanvasObject, c Context, defs map[string]string) string {
 	info := Lookup(clazz)
 	if info == nil {
 		return ""

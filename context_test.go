@@ -4,8 +4,8 @@ import (
 	"image/color"
 	"testing"
 
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/theme"
+	"github.com/Uzer007-admin/granio/v2/canvas"
+	"github.com/Uzer007-admin/granio/v2/theme"
 
 	"github.com/stretchr/testify/assert"
 )

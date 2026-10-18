@@ -6,12 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	_ "fyne.io/fyne/v2/test"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	_ "github.com/Uzer007-admin/granio/v2/test"
+	"github.com/Uzer007-admin/granio/v2/widget"
 
-	"github.com/fyne-io/refyne/internal/guidefs"
+	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -74,7 +74,7 @@ func TestDecodeObject(t *testing.T) {
 	guidefs.InitOnce()
 
 	buf := bytes.NewReader([]byte(fmt.Sprintf(labelJSON, "\n  \"Name\": \"myLabel\",")))
-	meta := make(map[fyne.CanvasObject]map[string]string)
+	meta := make(map[granio.CanvasObject]map[string]string)
 	obj, err := DecodeObject(buf, &context{meta: meta})
 	assert.Nil(t, err)
 
@@ -82,13 +82,13 @@ func TestDecodeObject(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, "Hi", l.Text)
 	assert.Equal(t, "myLabel", meta[l]["name"])
-	assert.Equal(t, fyne.TextAlignCenter, l.Alignment)
-	assert.Equal(t, fyne.TextStyle{Bold: true}, l.TextStyle)
+	assert.Equal(t, granio.TextAlignCenter, l.Alignment)
+	assert.Equal(t, granio.TextStyle{Bold: true}, l.TextStyle)
 }
 
 func TestDecodeSplit(t *testing.T) {
 	buf := bytes.NewReader([]byte(splitJSON))
-	meta := make(map[fyne.CanvasObject]map[string]string)
+	meta := make(map[granio.CanvasObject]map[string]string)
 	obj, err := DecodeObject(buf, &context{meta: meta})
 	assert.Nil(t, err)
 
@@ -106,15 +106,15 @@ func TestDecodeSplit(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "Hi", o1.Text)
 	assert.Equal(t, "Hi", o2.Text)
-	assert.Equal(t, fyne.TextStyle{Bold: true}, o1.TextStyle)
-	assert.Equal(t, fyne.TextStyle{Bold: true}, o2.TextStyle)
+	assert.Equal(t, granio.TextStyle{Bold: true}, o1.TextStyle)
+	assert.Equal(t, granio.TextStyle{Bold: true}, o2.TextStyle)
 }
 
 func TestEncodeObject(t *testing.T) {
-	l := widget.NewLabelWithStyle("Hi", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
+	l := widget.NewLabelWithStyle("Hi", granio.TextAlignCenter, granio.TextStyle{Bold: true})
 
 	props := map[string]string{"name": "myLabel"}
-	meta := map[fyne.CanvasObject]map[string]string{l: props}
+	meta := map[granio.CanvasObject]map[string]string{l: props}
 
 	var buf bytes.Buffer
 	err := EncodeObject(l, &context{meta: meta}, &buf)
@@ -123,14 +123,14 @@ func TestEncodeObject(t *testing.T) {
 }
 
 func TestEncodeSplit(t *testing.T) {
-	l1 := widget.NewLabelWithStyle("Hi", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
-	l2 := widget.NewLabelWithStyle("Hi", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
+	l1 := widget.NewLabelWithStyle("Hi", granio.TextAlignCenter, granio.TextStyle{Bold: true})
+	l2 := widget.NewLabelWithStyle("Hi", granio.TextAlignCenter, granio.TextStyle{Bold: true})
 	s := container.NewVSplit(l1, l2)
 	s.Horizontal = true
 	s.Offset = 0.75
 
 	props := map[string]string{"name": "mySplit"}
-	meta := map[fyne.CanvasObject]map[string]string{s: props}
+	meta := map[granio.CanvasObject]map[string]string{s: props}
 
 	var buf bytes.Buffer
 	err := EncodeObject(s, &context{meta: meta}, &buf)

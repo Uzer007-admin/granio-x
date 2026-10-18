@@ -1,11 +1,11 @@
 package guidefs
 
 import (
-	"fyne.io/fyne/v2"
+	"github.com/Uzer007-admin/granio/v2"
 )
 
 type jsonResource struct {
-	fyne.Resource `json:"-"`
+	granio.Resource `json:"-"`
 }
 
 func (r *jsonResource) MarshalJSON() ([]byte, error) {
@@ -14,13 +14,13 @@ func (r *jsonResource) MarshalJSON() ([]byte, error) {
 	return []byte(icon), nil
 }
 
-// WrapResource wraps a fyne.Resource for integration with JSON
-func WrapResource(r fyne.Resource) fyne.Resource {
+// WrapResource wraps a granio.Resource for integration with JSON
+func WrapResource(r granio.Resource) granio.Resource {
 	return &jsonResource{r}
 }
 
 // IconName returns the name for an icon
-func IconName(res fyne.Resource) string {
+func IconName(res granio.Resource) string {
 	name := res.Name()
 	// strip prefix numbers to unwrap
 	for name[0] >= '0' && name[0] <= '9' {

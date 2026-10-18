@@ -8,16 +8,16 @@ import (
 	"strconv"
 	"strings"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/layout"
+	"github.com/Uzer007-admin/granio/v2/theme"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type layoutInfo struct {
-	Create func(*fyne.Container, Context) fyne.Layout
-	Edit   func(*fyne.Container, Context) []*widget.FormItem
-	goText func(*fyne.Container, Context, map[string]string) string
+	Create func(*granio.Container, Context) granio.Layout
+	Edit   func(*granio.Container, Context) []*widget.FormItem
+	goText func(*granio.Container, Context, map[string]string) string
 }
 
 var (
@@ -27,7 +27,7 @@ var (
 	// Layouts maps container names to layout information to create and edit containers, and generate code
 	Layouts = map[string]layoutInfo{
 		"Border": {
-			func(c *fyne.Container, d Context) fyne.Layout {
+			func(c *granio.Container, d Context) granio.Layout {
 				props := d.Metadata()[c]
 				topNum := props["top"]
 				topID, _ := strconv.Atoi(topNum)
@@ -38,7 +38,7 @@ var (
 				rightNum := props["right"]
 				rightID, _ := strconv.Atoi(rightNum)
 
-				var t, b, l, r fyne.CanvasObject
+				var t, b, l, r granio.CanvasObject
 				if topNum != "" && topID < len(c.Objects) {
 					t = c.Objects[topID]
 				}
@@ -54,7 +54,7 @@ var (
 
 				return layout.NewBorderLayout(t, b, l, r)
 			},
-			func(c *fyne.Container, d Context) []*widget.FormItem {
+			func(c *granio.Container, d Context) []*widget.FormItem {
 				props := d.Metadata()[c]
 				topNum := props["top"]
 				topID, _ := strconv.Atoi(topNum)
@@ -65,11 +65,11 @@ var (
 				rightNum := props["right"]
 				rightID, _ := strconv.Atoi(rightNum)
 
-				var t, b, l, r fyne.CanvasObject
+				var t, b, l, r granio.CanvasObject
 				list := []string{"(Empty)"}
 				for _, w := range c.Objects {
 					label := ""
-					if c, ok := w.(*fyne.Container); ok {
+					if c, ok := w.(*granio.Container); ok {
 						name := d.Metadata()[w]["name"]
 						if name == "" {
 							name = fmt.Sprintf("%p", c)
@@ -144,7 +144,7 @@ var (
 					widget.NewFormItem("Middle", widget.NewLabel("(all other widgets)")),
 				}
 			},
-			func(c *fyne.Container, ctx Context, defs map[string]string) string {
+			func(c *granio.Container, ctx Context, defs map[string]string) string {
 				props := ctx.Metadata()[c]
 				topNum := props["top"]
 				topID, _ := strconv.Atoi(topNum)
@@ -156,7 +156,7 @@ var (
 				rightID, _ := strconv.Atoi(rightNum)
 
 				ignored := 0
-				var t, b, l, r fyne.CanvasObject
+				var t, b, l, r granio.CanvasObject
 				if topNum != "" && topID < len(c.Objects) {
 					t = c.Objects[topID]
 					ignored++
@@ -185,7 +185,7 @@ var (
 				writeGoStringOrNil(str, ctx, defs, r)
 				if len(c.Objects) > ignored {
 					str.WriteString(", ")
-					writeGoStringExcluding(str, func(o fyne.CanvasObject) bool {
+					writeGoStringExcluding(str, func(o granio.CanvasObject) bool {
 						return o == t || o == b || o == l || o == r
 					}, ctx, defs, c.Objects...)
 				}
@@ -194,21 +194,21 @@ var (
 			},
 		},
 		"Center": {
-			func(*fyne.Container, Context) fyne.Layout {
+			func(*granio.Container, Context) granio.Layout {
 				return layout.NewCenterLayout()
 			},
 			nil,
 			nil,
 		},
 		"Form": {
-			func(*fyne.Container, Context) fyne.Layout {
+			func(*granio.Container, Context) granio.Layout {
 				return layout.NewFormLayout()
 			},
 			nil,
 			nil,
 		},
 		"Grid": {
-			func(c *fyne.Container, d Context) fyne.Layout {
+			func(c *granio.Container, d Context) granio.Layout {
 				props := d.Metadata()[c]
 				rowCol := props["grid_type"]
 				if rowCol == "" {
@@ -229,7 +229,7 @@ var (
 				}
 				return layout.NewGridLayoutWithColumns(int(num))
 			},
-			func(c *fyne.Container, d Context) []*widget.FormItem {
+			func(c *granio.Container, d Context) []*widget.FormItem {
 				props := d.Metadata()[c]
 				rowCol := props["grid_type"]
 				if rowCol == "" {
@@ -269,7 +269,7 @@ var (
 					widget.NewFormItem("Arrange in", vert),
 				}
 			},
-			func(c *fyne.Container, ctx Context, defs map[string]string) string {
+			func(c *granio.Container, ctx Context, defs map[string]string) string {
 				props := ctx.Metadata()[c]
 				rowCol := props["grid_type"]
 				if rowCol == "" {
@@ -297,7 +297,7 @@ var (
 			},
 		},
 		"GridWrap": {
-			func(c *fyne.Container, d Context) fyne.Layout {
+			func(c *granio.Container, d Context) granio.Layout {
 				props := d.Metadata()[c]
 				width := props["width"]
 				if width == "" {
@@ -316,9 +316,9 @@ var (
 					h = 100
 				}
 
-				return layout.NewGridWrapLayout(fyne.NewSize(float32(w), float32(h)))
+				return layout.NewGridWrapLayout(granio.NewSize(float32(w), float32(h)))
 			},
-			func(c *fyne.Container, d Context) []*widget.FormItem {
+			func(c *granio.Container, d Context) []*widget.FormItem {
 				props := d.Metadata()[c]
 				width := props["width"]
 				if width == "" {
@@ -351,7 +351,7 @@ var (
 
 					props["width"] = widthEnt.Text
 					props["height"] = heightEnt.Text
-					c.Layout = layout.NewGridWrapLayout(fyne.NewSize(float32(w), float32(h)))
+					c.Layout = layout.NewGridWrapLayout(granio.NewSize(float32(w), float32(h)))
 					c.Refresh()
 				}
 				widthEnt.OnChanged = change
@@ -364,7 +364,7 @@ var (
 			nil,
 		},
 		"HBox": {
-			func(c *fyne.Container, d Context) fyne.Layout {
+			func(c *granio.Container, d Context) granio.Layout {
 				d.Metadata()[c]["dir"] = "horizontal"
 				return layout.NewHBoxLayout()
 			},
@@ -372,21 +372,21 @@ var (
 			nil,
 		},
 		"Max": {
-			func(_ *fyne.Container, _ Context) fyne.Layout {
+			func(_ *granio.Container, _ Context) granio.Layout {
 				return layout.NewStackLayout()
 			},
 			nil,
 			nil,
 		},
 		"Padded": {
-			func(_ *fyne.Container, _ Context) fyne.Layout {
+			func(_ *granio.Container, _ Context) granio.Layout {
 				return layout.NewPaddedLayout()
 			},
 			nil,
 			nil,
 		},
 		"CustomPadded": {
-			func(c *fyne.Container, d Context) fyne.Layout {
+			func(c *granio.Container, d Context) granio.Layout {
 				props := d.Metadata()[c]
 				pad := theme.Padding()
 				padStr := strconv.FormatFloat(float64(pad), 'f', -2, 64)
@@ -429,7 +429,7 @@ var (
 				}
 				return layout.NewCustomPaddedLayout(t, b, l, r)
 			},
-			func(c *fyne.Container, d Context) []*widget.FormItem {
+			func(c *granio.Container, d Context) []*widget.FormItem {
 				props := d.Metadata()[c]
 				pad := theme.Padding()
 				padStr := strconv.FormatFloat(float64(pad), 'f', -2, 64)
@@ -510,7 +510,7 @@ var (
 					widget.NewFormItem("Right", rightEnt),
 				}
 			},
-			func(c *fyne.Container, d Context, defs map[string]string) string {
+			func(c *granio.Container, d Context, defs map[string]string) string {
 				props := d.Metadata()
 				pad := theme.Padding()
 				padStr := strconv.FormatFloat(float64(pad), 'f', -2, 64)
@@ -542,7 +542,7 @@ var (
 				str.WriteString(", \n\t\t")
 				str.WriteString(rightNum)
 				str.WriteString("), ")
-				writeGoStringExcluding(str, func(o fyne.CanvasObject) bool {
+				writeGoStringExcluding(str, func(o granio.CanvasObject) bool {
 					return false
 				}, d, defs, c.Objects...)
 				str.WriteString(")")
@@ -550,21 +550,21 @@ var (
 			},
 		},
 		"RowWrap": {
-			func(_ *fyne.Container, _ Context) fyne.Layout {
+			func(_ *granio.Container, _ Context) granio.Layout {
 				return layout.NewRowWrapLayout()
 			},
 			nil,
 			nil,
 		},
 		"Stack": {
-			func(c *fyne.Container, d Context) fyne.Layout {
+			func(c *granio.Container, d Context) granio.Layout {
 				return layout.NewStackLayout()
 			},
 			nil,
 			nil,
 		},
 		"VBox": {
-			func(c *fyne.Container, d Context) fyne.Layout {
+			func(c *granio.Container, d Context) granio.Layout {
 				d.Metadata()[c]["dir"] = "vertical"
 				return layout.NewVBoxLayout()
 			},
@@ -572,15 +572,15 @@ var (
 			nil,
 		},
 		"WithoutLayout": {
-			func(c *fyne.Container, d Context) fyne.Layout {
+			func(c *granio.Container, d Context) granio.Layout {
 				return &withoutLayout{props: d.Metadata()}
 			},
 			nil,
-			func(c *fyne.Container, d Context, defs map[string]string) string {
+			func(c *granio.Container, d Context, defs map[string]string) string {
 				props := d.Metadata()
 
 				str := &strings.Builder{}
-				str.WriteString(`container.New(wrapLayout(func(objs []fyne.CanvasObject, _ fyne.Size) {
+				str.WriteString(`container.New(wrapLayout(func(objs []granio.CanvasObject, _ granio.Size) {
 `)
 
 				for i, o := range c.Objects {
@@ -602,16 +602,16 @@ var (
 					}
 
 					id := strconv.Itoa(i)
-					str.WriteString("\t\t\tobjs[" + id + "].Resize(fyne.NewSize(" + widthNum + ", " + heightNum + "))\n")
-					str.WriteString("\t\t\tobjs[" + id + "].Move(fyne.NewPos(" + xNum + ", " + yNum + "))\n")
+					str.WriteString("\t\t\tobjs[" + id + "].Resize(granio.NewSize(" + widthNum + ", " + heightNum + "))\n")
+					str.WriteString("\t\t\tobjs[" + id + "].Move(granio.NewPos(" + xNum + ", " + yNum + "))\n")
 				}
 
-				str.WriteString(`				}, func(objs []fyne.CanvasObject) fyne.Size {
-					return fyne.Size{}
+				str.WriteString(`				}, func(objs []granio.CanvasObject) granio.Size {
+					return granio.Size{}
 				})`)
 
 				str.WriteString(", ")
-				writeGoStringExcluding(str, func(o fyne.CanvasObject) bool {
+				writeGoStringExcluding(str, func(o granio.CanvasObject) bool {
 					return false
 				}, d, defs, c.Objects...)
 				str.WriteString(")")
@@ -642,7 +642,7 @@ func trim(in string, count int) string {
 	return in
 }
 
-func widgetName(o fyne.CanvasObject) string {
+func widgetName(o granio.CanvasObject) string {
 	switch w := o.(type) {
 	case *widget.Button:
 		return trim(w.Text, 10)
@@ -660,7 +660,7 @@ func widgetName(o fyne.CanvasObject) string {
 }
 
 func writeGoString(str *strings.Builder, c Context,
-	defs map[string]string, o fyne.CanvasObject,
+	defs map[string]string, o granio.CanvasObject,
 ) error {
 	clazz := TypeName(o)
 
@@ -675,7 +675,7 @@ func writeGoString(str *strings.Builder, c Context,
 }
 
 func writeGoStringOrNil(str *strings.Builder, c Context,
-	defs map[string]string, o fyne.CanvasObject,
+	defs map[string]string, o granio.CanvasObject,
 ) {
 	if o == nil {
 		str.WriteString("nil")
@@ -685,8 +685,8 @@ func writeGoStringOrNil(str *strings.Builder, c Context,
 	_ = writeGoString(str, c, defs, o)
 }
 
-func writeGoStringExcluding(str *strings.Builder, skip func(object fyne.CanvasObject) bool, c Context,
-	defs map[string]string, objs ...fyne.CanvasObject,
+func writeGoStringExcluding(str *strings.Builder, skip func(object granio.CanvasObject) bool, c Context,
+	defs map[string]string, objs ...granio.CanvasObject,
 ) {
 	for i, o := range objs {
 		if skip != nil && skip(o) {
@@ -695,7 +695,7 @@ func writeGoStringExcluding(str *strings.Builder, skip func(object fyne.CanvasOb
 
 		err := writeGoString(str, c, defs, o)
 		if err != nil {
-			fyne.LogError("Error writing Go string", err)
+			granio.LogError("Error writing Go string", err)
 		} else if i < len(objs)-1 {
 			str.WriteString(", ")
 		}
@@ -703,10 +703,10 @@ func writeGoStringExcluding(str *strings.Builder, skip func(object fyne.CanvasOb
 }
 
 type withoutLayout struct {
-	props map[fyne.CanvasObject]map[string]string
+	props map[granio.CanvasObject]map[string]string
 }
 
-func (m withoutLayout) Layout(objs []fyne.CanvasObject, _ fyne.Size) {
+func (m withoutLayout) Layout(objs []granio.CanvasObject, _ granio.Size) {
 	for i, o := range objs {
 		x, _ := strconv.ParseFloat(m.props[o]["x"], 32)
 		y, _ := strconv.ParseFloat(m.props[o]["y"], 32)
@@ -719,13 +719,13 @@ func (m withoutLayout) Layout(objs []fyne.CanvasObject, _ fyne.Size) {
 			h = float64(o.MinSize().Height)
 		}
 
-		objs[i].Resize(fyne.NewSize(float32(w), float32(h)))
-		objs[i].Move(fyne.NewPos(float32(x), float32(y)))
+		objs[i].Resize(granio.NewSize(float32(w), float32(h)))
+		objs[i].Move(granio.NewPos(float32(x), float32(y)))
 	}
 }
 
-func (m withoutLayout) MinSize([]fyne.CanvasObject) fyne.Size {
-	return fyne.Size{}
+func (m withoutLayout) MinSize([]granio.CanvasObject) granio.Size {
+	return granio.Size{}
 }
 
 func (m withoutLayout) WithoutLayout() bool {

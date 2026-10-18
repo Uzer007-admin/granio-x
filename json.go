@@ -12,21 +12,21 @@ import (
 	"strings"
 	"time"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/canvas"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/theme"
+	"github.com/Uzer007-admin/granio/v2/widget"
 
-	"github.com/fyne-io/refyne/internal/guidefs"
+	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
 )
 
 type canvObj struct {
 	Type       string
-	Name       string            `json:",omitempty"`
-	Actions    map[string]string `json:",omitempty"`
-	Struct     fyne.CanvasObject `json:",omitempty"`
-	Properties map[string]string `json:",omitempty"`
+	Name       string              `json:",omitempty"`
+	Actions    map[string]string   `json:",omitempty"`
+	Struct     granio.CanvasObject `json:",omitempty"`
+	Properties map[string]string   `json:",omitempty"`
 }
 
 type cntObj struct {
@@ -56,7 +56,7 @@ type cont struct {
 
 // DecodeObject returns a tree of `CanvasObject` elements from the provided JSON `Reader` and
 // updates the metadata map to include any additional information.
-func DecodeObject(r io.Reader, d Context) (fyne.CanvasObject, error) {
+func DecodeObject(r io.Reader, d Context) (granio.CanvasObject, error) {
 	guidefs.InitOnce()
 
 	var data interface{}
@@ -71,12 +71,12 @@ func DecodeObject(r io.Reader, d Context) (fyne.CanvasObject, error) {
 
 // DecodeMap returns a tree of `CanvasObject` elements from the provided JSON map and
 // updates the metadata map to include any additional information.
-func DecodeMap(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
+func DecodeMap(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
 	guidefs.InitOnce()
 
 	switch m["Type"] {
-	case "*fyne.Container":
-		obj := &fyne.Container{}
+	case "*granio.Container":
+		obj := &granio.Container{}
 		name := "WithoutLayout"
 		if n, ok := m["Layout"]; ok {
 			name = n.(string)
@@ -147,14 +147,14 @@ func DecodeMap(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
 		props["name"] = name.(string)
 	}
 
-	if setMin, ok := obj.(interface{ SetMinSize(fyne.Size) }); ok {
+	if setMin, ok := obj.(interface{ SetMinSize(granio.Size) }); ok {
 		minWithStr := props["minWidth"]
 		minHeightStr := props["minHeight"]
 		if (minWithStr != "" && minWithStr != "0") || (minHeightStr != "" && minHeightStr != "0") {
 			minWidth, _ := strconv.ParseFloat(minWithStr, 64)
 			minHeight, _ := strconv.ParseFloat(minHeightStr, 64)
 
-			setMin.SetMinSize(fyne.NewSize(float32(minWidth), float32(minHeight)))
+			setMin.SetMinSize(granio.NewSize(float32(minWidth), float32(minHeight)))
 		}
 	}
 
@@ -170,8 +170,8 @@ func DecodeMap(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
 	return obj, nil
 }
 
-func decodeThemeOverride(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
-	var content fyne.CanvasObject
+func decodeThemeOverride(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
+	var content granio.CanvasObject
 	info := m["Struct"].(map[string]interface{})
 	if info["Content"] != nil {
 		child, _ := DecodeMap(info["Content"].(map[string]interface{}), d)
@@ -188,7 +188,7 @@ func decodeThemeOverride(m map[string]interface{}, d Context) (fyne.CanvasObject
 	}
 	th, err := theme.FromJSONWithFallback(data.(string), fallback)
 	if err != nil {
-		fyne.LogError("Theme decode error", err)
+		granio.LogError("Theme decode error", err)
 	}
 	obj := container.NewThemeOverride(content, th)
 
@@ -203,7 +203,7 @@ func decodeThemeOverride(m map[string]interface{}, d Context) (fyne.CanvasObject
 	return obj, nil
 }
 
-func decodeAppTabs(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
+func decodeAppTabs(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
 	obj := &container.AppTabs{}
 	info := m["Struct"].(map[string]interface{})
 
@@ -250,7 +250,7 @@ func decodeAppTabs(m map[string]interface{}, d Context) (fyne.CanvasObject, erro
 	return obj, nil
 }
 
-func decodeClip(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
+func decodeClip(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
 	obj := &container.Clip{}
 	info := m["Struct"].(map[string]interface{})
 	if info["Content"] != nil {
@@ -263,7 +263,7 @@ func decodeClip(m map[string]interface{}, d Context) (fyne.CanvasObject, error) 
 	return obj, nil
 }
 
-func decodeNavigation(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
+func decodeNavigation(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
 	obj := &container.Navigation{}
 	info := m["Struct"].(map[string]interface{})
 	if info["Root"] != nil {
@@ -283,7 +283,7 @@ func decodeNavigation(m map[string]interface{}, d Context) (fyne.CanvasObject, e
 	return obj, nil
 }
 
-func decodeScroll(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
+func decodeScroll(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
 	obj := &container.Scroll{}
 	info := m["Struct"].(map[string]interface{})
 	if off, ok := info["Direction"]; ok {
@@ -303,7 +303,7 @@ func decodeScroll(m map[string]interface{}, d Context) (fyne.CanvasObject, error
 	return obj, nil
 }
 
-func decodeSplit(m map[string]interface{}, d Context) (fyne.CanvasObject, error) {
+func decodeSplit(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
 	obj := &container.Split{}
 	info := m["Struct"].(map[string]interface{})
 	if info["Horizontal"].(bool) {
@@ -332,7 +332,7 @@ func decodeSplit(m map[string]interface{}, d Context) (fyne.CanvasObject, error)
 
 // EncodeObject writes a JSON stream for the tree of `CanvasObject` elements provided.
 // If an error occurs it will be returned, otherwise nil.
-func EncodeObject(obj fyne.CanvasObject, d Context, w io.Writer) error {
+func EncodeObject(obj granio.CanvasObject, d Context, w io.Writer) error {
 	guidefs.InitOnce()
 	tree, _ := EncodeMap(obj, d)
 
@@ -343,7 +343,7 @@ func EncodeObject(obj fyne.CanvasObject, d Context, w io.Writer) error {
 
 // EncodeMap returns a JSON map for the tree of `CanvasObject` elements provided, using additional metadata if required.
 // If an error occurs it will be returned, otherwise nil.
-func EncodeMap(obj fyne.CanvasObject, d Context) (interface{}, error) {
+func EncodeMap(obj granio.CanvasObject, d Context) (interface{}, error) {
 	guidefs.InitOnce()
 
 	props := d.Metadata()[obj]
@@ -529,14 +529,14 @@ func EncodeMap(obj fyne.CanvasObject, d Context) (interface{}, error) {
 		}
 
 		return &node, nil
-	case fyne.Widget:
+	case granio.Widget:
 		if form, ok := c.(*widget.Form); ok {
 			return encodeForm(form, name, props), nil
 		}
 		return encodeWidget(c, name, actions, props), nil
-	case *fyne.Container:
+	case *granio.Container:
 		var node cont
-		node.Type = "*fyne.Container"
+		node.Type = "*granio.Container"
 		if c.Layout != nil {
 			node.Layout = strings.Split(reflect.TypeOf(c.Layout).String(), ".")[1]
 			node.Layout = strings.ToTitle(node.Layout[0:1]) + node.Layout[1:]
@@ -604,7 +604,7 @@ func encodeProperties(meta map[string]string, w *canvObj) {
 	}
 }
 
-func encodeWidget(obj fyne.CanvasObject, name string, actions map[string]string, meta map[string]string) *canvObj {
+func encodeWidget(obj granio.CanvasObject, name string, actions map[string]string, meta map[string]string) *canvObj {
 	w := &canvObj{Type: guidefs.TypeName(obj), Name: name, Struct: obj}
 
 	if len(actions) > 0 {
@@ -661,7 +661,7 @@ func decodeFromMap(m map[string]interface{}, in interface{}) {
 	}
 }
 
-func decodeTextStyle(m map[string]interface{}) (s fyne.TextStyle) {
+func decodeTextStyle(m map[string]interface{}) (s granio.TextStyle) {
 	if m["Bold"] == true {
 		s.Bold = true
 	}
@@ -678,11 +678,11 @@ func decodeTextStyle(m map[string]interface{}) (s fyne.TextStyle) {
 	return
 }
 
-func decodePosition(m map[string]interface{}) fyne.Position {
+func decodePosition(m map[string]interface{}) granio.Position {
 	x := m["X"].(float64)
 	y := m["Y"].(float64)
 
-	return fyne.NewPos(float32(x), float32(y))
+	return granio.NewPos(float32(x), float32(y))
 }
 
 func decodeToolbarItem(m map[string]interface{}) widget.ToolbarItem {
@@ -717,30 +717,30 @@ func decodeFields(e reflect.Value, in map[string]interface{}, d Context) error {
 		f := e.FieldByName(k)
 
 		if !f.IsValid() {
-			fyne.LogError("Field "+k+" is not valid", nil)
+			granio.LogError("Field "+k+" is not valid", nil)
 			continue
 		}
 
 		typeName := f.Type().String()
 		switch typeName {
-		case "fyne.TextAlign", "fyne.TextTruncation", "fyne.TextWrap", "widget.ButtonAlign", "widget.ButtonImportance",
-			"widget.ButtonIconPlacement", "widget.Importance", "widget.Orientation", "widget.ScrollDirection", "fyne.ScrollDirection",
+		case "granio.TextAlign", "granio.TextTruncation", "granio.TextWrap", "widget.ButtonAlign", "widget.ButtonImportance",
+			"widget.ButtonIconPlacement", "widget.Importance", "widget.Orientation", "widget.ScrollDirection", "granio.ScrollDirection",
 			"canvas.ImageFill", "canvas.ImageScale":
 			f.SetInt(int64(reflect.ValueOf(v).Float()))
-		case "fyne.TextStyle":
+		case "granio.TextStyle":
 			f.Set(reflect.ValueOf(decodeTextStyle(reflect.ValueOf(v).Interface().(map[string]interface{}))))
 		case "widget.RichTextStyle":
 			f.Set(reflect.ValueOf(decodeRichTextStyle(reflect.ValueOf(v).Interface().(map[string]interface{}))))
-		case "fyne.Position":
+		case "granio.Position":
 			f.Set(reflect.ValueOf(decodePosition(reflect.ValueOf(v).Interface().(map[string]interface{}))))
-		case "fyne.Resource":
+		case "granio.Resource":
 			res := guidefs.Icons[reflect.ValueOf(v).String()]
 			if res != nil {
 				f.Set(reflect.ValueOf(res))
 			}
-		case "fyne.ThemeSizeName":
+		case "granio.ThemeSizeName":
 			if v != nil {
-				f.Set(reflect.ValueOf(fyne.ThemeSizeName(v.(string))))
+				f.Set(reflect.ValueOf(granio.ThemeSizeName(v.(string))))
 			}
 		case "[]*widget.AccordionItem":
 			var items []*widget.AccordionItem
@@ -768,7 +768,7 @@ func decodeFields(e reflect.Value, in map[string]interface{}, d Context) error {
 				items = append(items, obj)
 			}
 			f.Set(reflect.ValueOf(items))
-		case "fyne.CanvasObject", "*canvas.Image":
+		case "granio.CanvasObject", "*canvas.Image":
 			if v == nil {
 				continue
 			}
@@ -801,7 +801,7 @@ func decodeFields(e reflect.Value, in map[string]interface{}, d Context) error {
 			t, err := time.Parse(time.RFC3339, s)
 			switch {
 			case err != nil:
-				fyne.LogError("Failed parse time "+s, err)
+				granio.LogError("Failed parse time "+s, err)
 			case typeName == "*time.Time":
 				f.Set(reflect.ValueOf(&t))
 			default:
@@ -845,7 +845,7 @@ func decodeFields(e reflect.Value, in map[string]interface{}, d Context) error {
 	return nil
 }
 
-func decodeWidget(m map[string]interface{}, d Context) fyne.CanvasObject {
+func decodeWidget(m map[string]interface{}, d Context) granio.CanvasObject {
 	class, ok := m["Type"].(string)
 	if !ok {
 		log.Println("Failed to detect type of object", m)
@@ -861,13 +861,13 @@ func decodeWidget(m map[string]interface{}, d Context) fyne.CanvasObject {
 
 	data, ok := m["Struct"]
 	if !ok {
-		fyne.LogError("Struct was not found in JSON data", nil)
+		granio.LogError("Struct was not found in JSON data", nil)
 		return obj
 	}
 
 	err := decodeFields(e, data.(map[string]interface{}), d)
 	if err != nil {
-		fyne.LogError("Failed to handle type "+class, err)
+		granio.LogError("Failed to handle type "+class, err)
 	}
 
 	if form, ok := obj.(*widget.Form); ok {

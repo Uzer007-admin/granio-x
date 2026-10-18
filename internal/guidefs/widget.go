@@ -12,23 +12,23 @@ import (
 	"strings"
 	"sync"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
-	"github.com/fyne-io/refyne/internal/tools"
+	"github.com/Uzer007-admin/granio-ui/internal/tools"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/dialog"
+	"github.com/Uzer007-admin/granio/v2/layout"
+	"github.com/Uzer007-admin/granio/v2/theme"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 const noIconLabel = "(No Icon)"
 
 // Context defines a graphical builder context that contains metadata and theme information.
 type Context interface {
-	Metadata() map[fyne.CanvasObject]map[string]string
-	Attrs() map[fyne.CanvasObject][]string
-	Theme() fyne.Theme
-	Root() fyne.CanvasObject
+	Metadata() map[granio.CanvasObject]map[string]string
+	Attrs() map[granio.CanvasObject][]string
+	Theme() granio.Theme
+	Root() granio.CanvasObject
 }
 
 var (
@@ -53,12 +53,12 @@ var (
 // WidgetInfo contains the name and corresponding functions for the widget type
 type WidgetInfo struct {
 	Name     string
-	Children func(o fyne.CanvasObject) []fyne.CanvasObject
-	AddChild func(parent, child fyne.CanvasObject)
-	Create   func(Context) fyne.CanvasObject
-	Edit     func(fyne.CanvasObject, Context, func([]*widget.FormItem), func()) []*widget.FormItem
-	Gostring func(fyne.CanvasObject, Context, map[string]string) string
-	Packages func(fyne.CanvasObject, Context) []string
+	Children func(o granio.CanvasObject) []granio.CanvasObject
+	AddChild func(parent, child granio.CanvasObject)
+	Create   func(Context) granio.CanvasObject
+	Edit     func(granio.CanvasObject, Context, func([]*widget.FormItem), func()) []*widget.FormItem
+	Gostring func(granio.CanvasObject, Context, map[string]string) string
+	Packages func(granio.CanvasObject, Context) []string
 }
 
 // IsContainer indicates whether a widget children or not
@@ -81,16 +81,16 @@ func initWidgets() {
 		"*widget.Select":     initSelectWidget(),
 		"*layout.Spacer": {
 			Name: "Spacer",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return layout.NewSpacer()
 			},
-			Edit: func(_ fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+			Edit: func(_ granio.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 				return []*widget.FormItem{}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				return widgetRef(obj, c, defs, "layout.NewSpacer()")
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"layout"}
 			},
 		},
@@ -99,17 +99,17 @@ func initWidgets() {
 		"*widget.Form":      initFormWidget(),
 		"*widget.MultiLineEntry": {
 			Name: "Multi Line Entry",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				mle := widget.NewMultiLineEntry()
 				mle.SetPlaceHolder("Enter Some \nLong text \nHere")
-				mle.Wrapping = fyne.TextWrapWord
+				mle.Wrapping = granio.TextWrapWord
 				return mle
 			},
 			// The rest inherits from Entry
 		},
 		"*widget.PasswordEntry": {
 			Name: "Password Entry",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				e := widget.NewPasswordEntry()
 				e.SetPlaceHolder("Password Entry")
 				return e
@@ -121,13 +121,13 @@ func initWidgets() {
 		"*widget.Separator": {
 			// Separator's height(or width as you may call) and color come from the theme, so not sure if we can change the color and height here
 			Name: "Separator",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return widget.NewSeparator()
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 				return []*widget.FormItem{}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				return widgetRef(obj, c, defs, "widget.NewSeparator()")
 			},
 		},
@@ -140,69 +140,69 @@ func initWidgets() {
 	Collections = map[string]WidgetInfo{
 		"*widget.List": {
 			Name: "List",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return widget.NewList(func() int {
 					return 5
-				}, func() fyne.CanvasObject {
+				}, func() granio.CanvasObject {
 					return widget.NewLabel("Template Object")
-				}, func(id widget.ListItemID, item fyne.CanvasObject) {
+				}, func(id widget.ListItemID, item granio.CanvasObject) {
 					item.(*widget.Label).SetText(fmt.Sprintf("Item %d", id+1))
 				})
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 				return []*widget.FormItem{}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				return widgetRef(obj, c, defs,
 					`widget.NewList(func() int {
 				return 5
-			}, func() fyne.CanvasObject {
+			}, func() granio.CanvasObject {
 				return widget.NewLabel("Template Object")
-			}, func(id widget.ListItemID, item fyne.CanvasObject) {
+			}, func(id widget.ListItemID, item granio.CanvasObject) {
 				item.(*widget.Label).SetText(fmt.Sprintf("Item %d", id+1))
 			})`)
 			},
-			Packages: func(obj fyne.CanvasObject, c Context) []string {
+			Packages: func(obj granio.CanvasObject, c Context) []string {
 				pkgs := []string{"widget", "fmt"}
 				if c.Metadata()[obj]["Data"] != "" {
-					return append(pkgs, "fyne.io/fyne/v2/data/binding")
+					return append(pkgs, "github.com/Uzer007-admin/granio/v2/data/binding")
 				}
 				return pkgs
 			},
 		},
 		"*widget.Table": {
 			Name: "Table",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return widget.NewTable(func() (int, int) {
 					return 3, 3
-				}, func() fyne.CanvasObject {
+				}, func() granio.CanvasObject {
 					return widget.NewLabel("Cell 000, 000")
-				}, func(id widget.TableCellID, cell fyne.CanvasObject) {
+				}, func(id widget.TableCellID, cell granio.CanvasObject) {
 					label := cell.(*widget.Label)
 					label.SetText(fmt.Sprintf("Cell %d, %d", id.Row+1, id.Col+1))
 				})
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 				return []*widget.FormItem{}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				return widgetRef(obj, c, defs,
 					`widget.NewTable(func() (int, int) {
 				return 3, 3
-			}, func() fyne.CanvasObject {
+			}, func() granio.CanvasObject {
 				return widget.NewLabel("Cell 000, 000")
-			}, func(id widget.TableCellID, cell fyne.CanvasObject) {
+			}, func(id widget.TableCellID, cell granio.CanvasObject) {
 				label := cell.(*widget.Label)
 				label.SetText(fmt.Sprintf("Cell %d, %d", id.Row+1, id.Col+1))
 			})`)
 			},
-			Packages: func(obj fyne.CanvasObject, _ Context) []string {
+			Packages: func(obj granio.CanvasObject, _ Context) []string {
 				return []string{"widget", "fmt"}
 			},
 		},
 		"*widget.Tree": {
 			Name: "Tree",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				data := map[string][]string{
 					"":  {"A"},
 					"A": {"B", "D", "H", "J", "L", "O", "P", "S", "V"},
@@ -242,10 +242,10 @@ func initWidgets() {
 				tree.OpenBranch("M")
 				return tree
 			},
-			Edit: func(co fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+			Edit: func(co granio.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 				return []*widget.FormItem{}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				return widgetRef(obj, c, defs,
 					`widget.NewTreeWithStrings(
 map[string][]string{
@@ -283,10 +283,10 @@ map[string][]string{
 func initAccordionWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Accordion",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewAccordion(widget.NewAccordionItem("Item 1", widget.NewLabel("The content goes here")), widget.NewAccordionItem("Item 2", widget.NewLabel("Content part 2 goes here")))
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			acc := obj.(*widget.Accordion)
 			multi := widget.NewCheck("", func(on bool) {
 				acc.MultiOpen = on
@@ -299,7 +299,7 @@ func initAccordionWidget() WidgetInfo {
 			// entry := widget.NewEntry()
 			return []*widget.FormItem{widget.NewFormItem("Multiple Open", multi)}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			items := "widget.NewAccordionItem(\"Item 1\", widget.NewLabel(\"The content goes here\")), widget.NewAccordionItem(\"Item 2\", widget.NewLabel(\"Content part 2 goes here\"))"
 			acc := obj.(*widget.Accordion)
 			if acc.MultiOpen {
@@ -316,15 +316,15 @@ func initAccordionWidget() WidgetInfo {
 func initActivityWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Activity Indicator",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			a := widget.NewActivity()
 			a.Start()
 			return a
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			return []*widget.FormItem{}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			return widgetRef(obj, c, defs, "widget.NewActivity()")
 		},
 	}
@@ -333,10 +333,10 @@ func initActivityWidget() WidgetInfo {
 func initButtonWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Button",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewButton("Button", func() {})
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			b := obj.(*widget.Button)
 			entry := widget.NewEntry()
 			entry.SetText(b.Text)
@@ -431,7 +431,7 @@ func initButtonWidget() WidgetInfo {
 				widget.NewFormItem("Alignment", aligns),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			props := c.Metadata()[obj]
 			b := obj.(*widget.Button)
 
@@ -455,7 +455,7 @@ func initButtonWidget() WidgetInfo {
 
 			return widgetRef(obj, c, defs, fmt.Sprintf("widget.NewButton(%q, nil)", b.Text))
 		},
-		Packages: func(obj fyne.CanvasObject, _ Context) []string {
+		Packages: func(obj granio.CanvasObject, _ Context) []string {
 			b := obj.(*widget.Button)
 			if b.Icon == nil {
 				return []string{"widget"}
@@ -469,21 +469,21 @@ func initButtonWidget() WidgetInfo {
 func initCardWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Card",
-		Children: func(o fyne.CanvasObject) []fyne.CanvasObject {
+		Children: func(o granio.CanvasObject) []granio.CanvasObject {
 			c := o.(*widget.Card)
 			if c.Content == nil {
 				return nil
 			}
-			return []fyne.CanvasObject{c.Content}
+			return []granio.CanvasObject{c.Content}
 		},
-		AddChild: func(parent, o fyne.CanvasObject) {
+		AddChild: func(parent, o granio.CanvasObject) {
 			c := parent.(*widget.Card)
 			c.SetContent(o)
 		},
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewCard("Title", "Subtitle", widget.NewLabel("Content here"))
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			c := obj.(*widget.Card)
 			title := widget.NewEntry()
 			title.SetText(c.Title)
@@ -502,7 +502,7 @@ func initCardWidget() WidgetInfo {
 				widget.NewFormItem("Subtitle", subtitle),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, ctx Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, ctx Context, defs map[string]string) string {
 			c := obj.(*widget.Card)
 			str := &strings.Builder{}
 			str.WriteString(fmt.Sprintf("widget.NewCard(\"%s\", \"%s\", ",
@@ -517,10 +517,10 @@ func initCardWidget() WidgetInfo {
 func initCheckWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Check",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewCheck("Tick it or don't", func(b bool) {})
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			c := obj.(*widget.Check)
 			title := widget.NewEntry()
 			title.SetText(c.Text)
@@ -552,7 +552,7 @@ func initCheckWidget() WidgetInfo {
 				widget.NewFormItem("isPartial", isPartial),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, ctx Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, ctx Context, defs map[string]string) string {
 			c := obj.(*widget.Check)
 			attrs := ctx.Attrs()[obj]
 			if c.Checked {
@@ -571,15 +571,15 @@ func initCheckWidget() WidgetInfo {
 func initDateEntryWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "DateEntry",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewDateEntry()
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 			_ = obj.(*widget.DateEntry)
 
 			return []*widget.FormItem{}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			_ = obj.(*widget.DateEntry)
 
 			return widgetRef(obj, c, defs, "widget.NewDateEntry()")
@@ -590,12 +590,12 @@ func initDateEntryWidget() WidgetInfo {
 func initEntryWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Entry",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			e := widget.NewEntry()
 			e.SetPlaceHolder("Entry")
 			return e
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			l := obj.(*widget.Entry)
 			entry1 := widget.NewEntry()
 			entry1.SetText(l.Text)
@@ -612,13 +612,13 @@ func initEntryWidget() WidgetInfo {
 			scroll := widget.NewSelect([]string{"Both", "HorizontalOnly", "VerticalOnly", "None"}, func(text string) {
 				switch text {
 				case "Both":
-					l.Scroll = fyne.ScrollBoth
+					l.Scroll = granio.ScrollBoth
 				case "HorizontalOnly":
-					l.Scroll = fyne.ScrollHorizontalOnly
+					l.Scroll = granio.ScrollHorizontalOnly
 				case "VerticalOnly":
-					l.Scroll = fyne.ScrollVerticalOnly
+					l.Scroll = granio.ScrollVerticalOnly
 				case "None":
-					l.Scroll = fyne.ScrollNone
+					l.Scroll = granio.ScrollNone
 				}
 				l.Refresh()
 				onchanged()
@@ -629,7 +629,7 @@ func initEntryWidget() WidgetInfo {
 				widget.NewFormItem("Scroll", scroll),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			l := obj.(*widget.Entry)
 			props := c.Metadata()[obj]
 
@@ -651,7 +651,7 @@ func initEntryWidget() WidgetInfo {
 			if l.Password {
 				attrs = append(attrs, "Password = true")
 			}
-			if l.Scroll != fyne.ScrollBoth {
+			if l.Scroll != granio.ScrollBoth {
 				attrs = append(attrs, fmt.Sprintf("Scroll = %v", l.Scroll))
 			}
 			c.Attrs()[obj] = attrs
@@ -664,13 +664,13 @@ func initEntryWidget() WidgetInfo {
 func initFormWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Form",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			f := widget.NewForm(widget.NewFormItem("Username", widget.NewEntry()), widget.NewFormItem("Password", widget.NewPasswordEntry()), widget.NewFormItem("Remember", widget.NewCheck("", func(bool) {})))
 			f.OnSubmit = func() {}
 			f.OnCancel = func() {}
 			return f
 		},
-		Edit: func(obj fyne.CanvasObject, c Context, refresh func([]*widget.FormItem), _ func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, c Context, refresh func([]*widget.FormItem), _ func()) []*widget.FormItem {
 			items := []*widget.FormItem{}
 			form := obj.(*widget.Form)
 			formItems := form.Items
@@ -686,7 +686,7 @@ func initFormWidget() WidgetInfo {
 			}
 			form.Refresh()
 
-			tidyWidget := func(wid, src fyne.CanvasObject) {
+			tidyWidget := func(wid, src granio.CanvasObject) {
 				switch t := wid.(type) {
 				case *widget.Entry:
 					t.PlaceHolder = ""
@@ -698,7 +698,7 @@ func initFormWidget() WidgetInfo {
 			}
 
 			// TODO get the window passed in somehow
-			w := fyne.CurrentApp().Driver().AllWindows()[0]
+			w := granio.CurrentApp().Driver().AllWindows()[0]
 
 			var editItem, removeItem func(int)
 			add := widget.NewButtonWithIcon("Add...", theme.ContentAddIcon(), nil)
@@ -771,7 +771,7 @@ func initFormWidget() WidgetInfo {
 					obj.(*widget.Form).Items = formItems
 					obj.Refresh()
 
-					var row *fyne.Container
+					var row *granio.Container
 					edit := widget.NewButtonWithIcon("", theme.DocumentCreateIcon(), func() {
 						index := getFormIndex(row, items)
 						editItem(index)
@@ -824,7 +824,7 @@ func initFormWidget() WidgetInfo {
 				wid := Lookup(class).Create(c)
 				tidyWidget(wid, o.Widget)
 
-				var row *fyne.Container
+				var row *granio.Container
 				edit := widget.NewButtonWithIcon("", theme.DocumentCreateIcon(), func() {
 					index := getFormIndex(row, items)
 					editItem(index)
@@ -839,7 +839,7 @@ func initFormWidget() WidgetInfo {
 
 			return append(items, hideButtons, orientationSelect, addLine)
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			form := obj.(*widget.Form)
 			hidden, _ := strconv.ParseBool(c.Metadata()[obj]["hideButtons"])
 
@@ -867,11 +867,11 @@ func initFormWidget() WidgetInfo {
 func initHyperlinkWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Hyperlink",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			fyneURL, _ := url.Parse("https://fyne.io")
 			return widget.NewHyperlink("Link Text", fyneURL)
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			link := obj.(*widget.Hyperlink)
 			title := widget.NewEntry()
 			title.SetText(link.Text)
@@ -891,11 +891,11 @@ func initHyperlinkWidget() WidgetInfo {
 				widget.NewFormItem("URL", subtitle),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			link := obj.(*widget.Hyperlink)
 			return widgetRef(obj, c, defs, fmt.Sprintf(`widget.NewHyperlink("%s", %#v)`, escapeLabel(link.Text), link.URL))
 		},
-		Packages: func(_ fyne.CanvasObject, _ Context) []string {
+		Packages: func(_ granio.CanvasObject, _ Context) []string {
 			return []string{"net/url"}
 		},
 	}
@@ -904,25 +904,25 @@ func initHyperlinkWidget() WidgetInfo {
 func initIconWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Icon",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewIcon(theme.HelpIcon())
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			i := obj.(*widget.Icon)
 			return []*widget.FormItem{
-				widget.NewFormItem("Icon", newIconSelectorButton(i.Resource, func(res fyne.Resource) {
+				widget.NewFormItem("Icon", newIconSelectorButton(i.Resource, func(res granio.Resource) {
 					i.SetResource(res)
 					onchanged()
 				}, true)),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			i := obj.(*widget.Icon)
 
 			res := "theme." + IconName(i.Resource) + "()"
 			return widgetRef(obj, c, defs, fmt.Sprintf("widget.NewIcon(%s)", res))
 		},
-		Packages: func(obj fyne.CanvasObject, _ Context) []string {
+		Packages: func(obj granio.CanvasObject, _ Context) []string {
 			return []string{"widget", "theme"}
 		},
 	}
@@ -931,10 +931,10 @@ func initIconWidget() WidgetInfo {
 func initLabelWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Label",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewLabel("Label")
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			l := obj.(*widget.Label)
 			entry := widget.NewEntry()
 			entry.SetText(l.Text)
@@ -945,14 +945,14 @@ func initLabelWidget() WidgetInfo {
 
 			wrap := widget.NewCheck("", func(on bool) {
 				if on {
-					l.Wrapping = fyne.TextWrapWord
+					l.Wrapping = granio.TextWrapWord
 				} else {
-					l.Wrapping = fyne.TextWrapOff
+					l.Wrapping = granio.TextWrapOff
 				}
 				l.Refresh()
 				onchanged()
 			})
-			wrap.Checked = l.Wrapping == fyne.TextWrapWord
+			wrap.Checked = l.Wrapping == granio.TextWrapWord
 
 			bold := widget.NewCheck("", func(on bool) {
 				l.TextStyle.Bold = on
@@ -975,11 +975,11 @@ func initLabelWidget() WidgetInfo {
 
 			var left, center, right *widget.Button
 			ready := false
-			setAlign := func(a fyne.TextAlign) {
+			setAlign := func(a granio.TextAlign) {
 				l.Alignment = a
 				l.Refresh()
 
-				setState := func(b *widget.Button, a fyne.TextAlign) {
+				setState := func(b *widget.Button, a granio.TextAlign) {
 					if l.Alignment == a {
 						b.Importance = widget.HighImportance
 					} else {
@@ -988,21 +988,21 @@ func initLabelWidget() WidgetInfo {
 					b.Refresh()
 				}
 
-				setState(left, fyne.TextAlignLeading)
-				setState(center, fyne.TextAlignCenter)
-				setState(right, fyne.TextAlignTrailing)
+				setState(left, granio.TextAlignLeading)
+				setState(center, granio.TextAlignCenter)
+				setState(right, granio.TextAlignTrailing)
 				if ready {
 					onchanged()
 				}
 			}
 			left = widget.NewButtonWithIcon("", resourceFormatalignleftSvg, func() {
-				setAlign(fyne.TextAlignLeading)
+				setAlign(granio.TextAlignLeading)
 			})
 			center = widget.NewButtonWithIcon("", resourceFormataligncenterSvg, func() {
-				setAlign(fyne.TextAlignCenter)
+				setAlign(granio.TextAlignCenter)
 			})
 			right = widget.NewButtonWithIcon("", resourceFormatalignrightSvg, func() {
-				setAlign(fyne.TextAlignTrailing)
+				setAlign(granio.TextAlignTrailing)
 			})
 			aligns := container.NewHBox(left, center, right)
 			setAlign(l.Alignment)
@@ -1017,9 +1017,9 @@ func initLabelWidget() WidgetInfo {
 				widget.NewFormItem("Alignment", aligns),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			l := obj.(*widget.Label)
-			if l.Alignment != fyne.TextAlignLeading || l.Wrapping != fyne.TextWrapOff {
+			if l.Alignment != granio.TextAlignLeading || l.Wrapping != granio.TextWrapOff {
 				styles := []string{}
 				if l.TextStyle.Bold {
 					styles = append(styles, "Bold")
@@ -1032,7 +1032,7 @@ func initLabelWidget() WidgetInfo {
 				}
 				style := ""
 				if len(styles) > 0 {
-					style = ", TextStyle: fyne.TextStyle{"
+					style = ", TextStyle: granio.TextStyle{"
 					for n, s := range styles {
 						if n > 0 {
 							style += ", "
@@ -1058,12 +1058,12 @@ func initLabelWidget() WidgetInfo {
 func initProgressBarWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Progress Bar",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			p := widget.NewProgressBar()
 			p.SetValue(0.1)
 			return p
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			p := obj.(*widget.ProgressBar)
 			value := widget.NewEntry()
 			value.SetText(fmt.Sprintf("%f", p.Value))
@@ -1097,7 +1097,7 @@ func initProgressBarWidget() WidgetInfo {
 				widget.NewFormItem("Value", value),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			p := obj.(*widget.ProgressBar)
 			return widgetRef(obj, c, defs,
 				fmt.Sprintf("&widget.ProgressBar{Min: %f, Max: %f, Value: %f}", p.Min, p.Max, p.Value))
@@ -1108,15 +1108,15 @@ func initProgressBarWidget() WidgetInfo {
 func initProgressBarInfiniteWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Infinite Progress Bar",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			p := widget.NewProgressBarInfinite()
 			p.Start()
 			return p
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			return []*widget.FormItem{}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			return widgetRef(obj, c, defs, "widget.NewProgressBarInfinite()")
 		},
 	}
@@ -1125,10 +1125,10 @@ func initProgressBarInfiniteWidget() WidgetInfo {
 func initRadioGroupWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "RadioGroup",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewRadioGroup([]string{"Option 1", "Option 2"}, func(s string) {})
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			r := obj.(*widget.RadioGroup)
 			initialOption := widget.NewRadioGroup(r.Options, func(s string) {
 				r.SetSelected(s)
@@ -1149,7 +1149,7 @@ func initRadioGroupWidget() WidgetInfo {
 				widget.NewFormItem("Initial Option", initialOption),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			r := obj.(*widget.RadioGroup)
 			var opts []string
 			for _, v := range r.Options {
@@ -1164,10 +1164,10 @@ func initRadioGroupWidget() WidgetInfo {
 func initRichTextWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "RichText",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewRichTextFromMarkdown("## Rich Text")
 		},
-		Edit: func(obj fyne.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			props := c.Metadata()[obj]
 			r := obj.(*widget.RichText)
 			entry := widget.NewMultiLineEntry()
@@ -1178,10 +1178,10 @@ func initRichTextWidget() WidgetInfo {
 				onchanged()
 			}
 
-			wraps := map[string]fyne.TextWrap{
-				"Off":   fyne.TextWrapOff,
-				"Word":  fyne.TextWrapWord,
-				"Break": fyne.TextWrapBreak,
+			wraps := map[string]granio.TextWrap{
+				"Off":   granio.TextWrapOff,
+				"Word":  granio.TextWrapWord,
+				"Break": granio.TextWrapBreak,
 			}
 			wrap := widget.NewSelect([]string{"Off", "Word", "Break"}, func(w string) {
 				r.Wrapping = wraps[w]
@@ -1189,9 +1189,9 @@ func initRichTextWidget() WidgetInfo {
 				onchanged()
 			})
 			wrap.Selected = "Off"
-			if r.Wrapping == fyne.TextWrapWord {
+			if r.Wrapping == granio.TextWrapWord {
 				wrap.Selected = "Word"
-			} else if r.Wrapping == fyne.TextWrapBreak {
+			} else if r.Wrapping == granio.TextWrapBreak {
 				wrap.Selected = "Break"
 			}
 
@@ -1200,12 +1200,12 @@ func initRichTextWidget() WidgetInfo {
 				widget.NewFormItem("Wrapping", wrap),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			props := c.Metadata()[obj]
 			rich := obj.(*widget.RichText)
 
 			attrs := c.Attrs()[obj]
-			if rich.Wrapping != fyne.TextWrapOff {
+			if rich.Wrapping != granio.TextWrapOff {
 				attrs = append(attrs, fmt.Sprintf("Wrapping = %#v", rich.Wrapping))
 			}
 			c.Attrs()[obj] = attrs
@@ -1218,10 +1218,10 @@ func initRichTextWidget() WidgetInfo {
 func initSelectWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Select",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewSelect([]string{"Option 1", "Option 2"}, func(value string) {})
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			s := obj.(*widget.Select)
 			initialOption := widget.NewSelect(append([]string{"(Select one)"}, s.Options...), nil)
 			initialOption.SetSelected(s.Selected)
@@ -1246,7 +1246,7 @@ func initSelectWidget() WidgetInfo {
 				widget.NewFormItem("Initial Option", initialOption),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			s := obj.(*widget.Select)
 			var opts []string
 			for _, v := range s.Options {
@@ -1268,14 +1268,14 @@ func initSelectWidget() WidgetInfo {
 func initSliderWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Slider",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			s := widget.NewSlider(0, 100)
 			s.OnChanged = func(f float64) {
 				fmt.Println("Slider changed to", f)
 			}
 			return s
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			slider := obj.(*widget.Slider)
 			val := widget.NewEntry()
 			val.SetText(fmt.Sprintf("%f", slider.Value))
@@ -1330,7 +1330,7 @@ func initSliderWidget() WidgetInfo {
 				widget.NewFormItem("Vertical", vert),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			slider := obj.(*widget.Slider)
 			orient := "widget.Horizontal"
 			if slider.Orientation == widget.Vertical {
@@ -1344,12 +1344,12 @@ func initSliderWidget() WidgetInfo {
 func initTextGridWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Text Grid",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			to := widget.NewTextGrid()
 			to.SetText("ABCD \nEFGH")
 			return to
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			to := obj.(*widget.TextGrid)
 			entry := widget.NewEntry()
 			entry.SetText(to.Text())
@@ -1361,7 +1361,7 @@ func initTextGridWidget() WidgetInfo {
 				widget.NewFormItem("Text", entry),
 			}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			to := obj.(*widget.TextGrid)
 			return widgetRef(obj, c, defs,
 				fmt.Sprintf("widget.NewTextGrid(\"%s\")", escapeLabel(to.Text())))
@@ -1372,7 +1372,7 @@ func initTextGridWidget() WidgetInfo {
 func initToolbarWidget() WidgetInfo {
 	return WidgetInfo{
 		Name: "Toolbar",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return widget.NewToolbar(
 				widget.NewToolbarAction(Icons["FileIcon"], func() { fmt.Println("Clicked on FileIcon") }),
 				widget.NewToolbarSeparator(),
@@ -1383,7 +1383,7 @@ func initToolbarWidget() WidgetInfo {
 				widget.NewToolbarAction(Icons["HelpIcon"], func() { fmt.Println("Clicked on HelpIcon") }),
 			)
 		},
-		Edit: func(obj fyne.CanvasObject, _ Context, refresh func([]*widget.FormItem), _ func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, _ Context, refresh func([]*widget.FormItem), _ func()) []*widget.FormItem {
 			items := []*widget.FormItem{}
 			toolItems := obj.(*widget.Toolbar).Items
 
@@ -1402,7 +1402,7 @@ func initToolbarWidget() WidgetInfo {
 			newToolEdit := func(id int, o widget.ToolbarItem) *widget.FormItem {
 				chosen := ""
 				holder := container.NewStack()
-				var wid fyne.CanvasObject
+				var wid granio.CanvasObject
 
 				switch t := o.(type) {
 				case *widget.ToolbarSeparator:
@@ -1412,7 +1412,7 @@ func initToolbarWidget() WidgetInfo {
 				case *widget.ToolbarAction:
 					chosen = options[0]
 					wid = newIconSelectorButton(t.Icon, t.SetIcon, false)
-					holder.Objects = []fyne.CanvasObject{wid}
+					holder.Objects = []granio.CanvasObject{wid}
 				}
 
 				chooser := widget.NewSelect(options, func(s string) {
@@ -1430,7 +1430,7 @@ func initToolbarWidget() WidgetInfo {
 						toolItems[id] = act
 						items[id].Text = "Action"
 
-						holder.Objects = []fyne.CanvasObject{newIconSelectorButton(act.Icon, act.SetIcon, false)}
+						holder.Objects = []granio.CanvasObject{newIconSelectorButton(act.Icon, act.SetIcon, false)}
 					}
 
 					obj.Refresh()
@@ -1438,7 +1438,7 @@ func initToolbarWidget() WidgetInfo {
 				})
 				chooser.Selected = chosen
 
-				var row *fyne.Container
+				var row *granio.Container
 				remove := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
 					index := getFormIndex(row, items)
 					removeItem(index)
@@ -1466,7 +1466,7 @@ func initToolbarWidget() WidgetInfo {
 
 			return append(items, addLine)
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			str := &strings.Builder{}
 			str.WriteString("widget.NewToolbar(\n")
 			for _, i := range obj.(*widget.Toolbar).Items {
@@ -1510,7 +1510,7 @@ func extractNames(in map[string]WidgetInfo) []string {
 	return widgetNamesFromData
 }
 
-func widgetRef(obj fyne.CanvasObject, c Context, defs map[string]string, code string) string {
+func widgetRef(obj granio.CanvasObject, c Context, defs map[string]string, code string) string {
 	props := c.Metadata()[obj]
 	if props == nil {
 		props = make(map[string]string)

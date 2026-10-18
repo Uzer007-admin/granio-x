@@ -3,8 +3,8 @@ package guidefs
 import (
 	"sort"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/theme"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/theme"
 )
 
 var (
@@ -15,12 +15,12 @@ var (
 	IconReverse map[string]string
 
 	// Icons Has the hashmap of Icons from the standard theme.
-	// ToDo: Will have to look for a way to sync the list from `fyne_demo`
-	Icons map[string]fyne.Resource
+	// ToDo: Will have to look for a way to sync the list from `granio_demo`
+	Icons map[string]granio.Resource
 )
 
 func initIcons() {
-	Icons = map[string]fyne.Resource{
+	Icons = map[string]granio.Resource{
 		"CancelIcon":        theme.CancelIcon(),
 		"ConfirmIcon":       theme.ConfirmIcon(),
 		"DeleteIcon":        theme.DeleteIcon(),

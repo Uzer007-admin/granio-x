@@ -3,7 +3,7 @@ package guidefs
 import (
 	"reflect"
 
-	"fyne.io/fyne/v2"
+	"github.com/Uzer007-admin/granio/v2"
 )
 
 // Lookup returns the [WidgetInfo] for the given widget type.
@@ -25,7 +25,7 @@ func Lookup(clazz string) *WidgetInfo {
 }
 
 // TypeName returns the unique name for this object, i.e. "canvas.Line" or "xWidget.Map"
-func TypeName(o fyne.CanvasObject) string {
+func TypeName(o granio.CanvasObject) string {
 	class := reflect.TypeOf(o).String()
 	info := Lookup(class)
 	if info == nil {

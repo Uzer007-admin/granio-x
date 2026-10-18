@@ -5,22 +5,22 @@ import (
 	"strconv"
 	"strings"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/theme"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 func initContainers() {
 	Containers = map[string]WidgetInfo{
-		"*fyne.Container": {
+		"*granio.Container": {
 			Name: "Container",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return container.NewVBox()
 			},
-			Edit: func(obj fyne.CanvasObject, ctx Context, refresh func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, ctx Context, refresh func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				props := ctx.Metadata()[obj]
-				c := obj.(*fyne.Container)
+				c := obj.(*granio.Container)
 
 				choose := widget.NewFormItem("Layout", widget.NewSelect(layoutNames, nil))
 				items := []*widget.FormItem{choose}
@@ -46,9 +46,9 @@ func initContainers() {
 				ready = true
 				return items
 			},
-			Gostring: func(obj fyne.CanvasObject, ctx Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, ctx Context, defs map[string]string) string {
 				props := ctx.Metadata()
-				c := obj.(*fyne.Container)
+				c := obj.(*granio.Container)
 				l := props[c]["layout"]
 				if l == "" {
 					l = "VBox"
@@ -81,7 +81,7 @@ func initContainers() {
 						h = 100
 					}
 
-					str.WriteString(fmt.Sprintf("container.New(layout.NewGridWrapLayout(fyne.NewSize(float32(%d), float32(%d))),\n", w, h))
+					str.WriteString(fmt.Sprintf("container.New(layout.NewGridWrapLayout(granio.NewSize(float32(%d), float32(%d))),\n", w, h))
 				} else {
 					str.WriteString(fmt.Sprintf("container.New%s(", l))
 				}
@@ -92,25 +92,25 @@ func initContainers() {
 		},
 		"*container.AppTabs": {
 			Name: "App Tabs",
-			Children: func(o fyne.CanvasObject) []fyne.CanvasObject {
+			Children: func(o granio.CanvasObject) []granio.CanvasObject {
 				tabs := o.(*container.AppTabs)
 
-				children := make([]fyne.CanvasObject, len(tabs.Items))
+				children := make([]granio.CanvasObject, len(tabs.Items))
 				for i, c := range tabs.Items {
 					children[i] = c.Content
 				}
 				return children
 			},
-			AddChild: func(parent, o fyne.CanvasObject) {
+			AddChild: func(parent, o granio.CanvasObject) {
 				tabs := o.(*container.AppTabs)
 
 				item := container.NewTabItem("Untitled", o)
 				tabs.Append(item)
 			},
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return container.NewAppTabs(container.NewTabItem("Untitled", container.NewStack()))
 			},
-			Edit: func(obj fyne.CanvasObject, c Context, setItems func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, c Context, setItems func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				tabs := obj.(*container.AppTabs)
 				props := c.Metadata()[tabs]
 				items := make([]*widget.FormItem, len(tabs.Items)+3)
@@ -140,7 +140,7 @@ func initContainers() {
 				items[0] = widget.NewFormItem("Location", locations)
 
 				newRow := func(item *container.TabItem, i int) *widget.FormItem {
-					icon := newIconSelectorButton(item.Icon, func(i fyne.Resource) {
+					icon := newIconSelectorButton(item.Icon, func(i granio.Resource) {
 						item.Icon = i
 						tabs.Refresh()
 						onchanged()
@@ -204,7 +204,7 @@ func initContainers() {
 				items[len(items)-1] = widget.NewFormItem("Selected", selected)
 				return items
 			},
-			Gostring: func(obj fyne.CanvasObject, ctx Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, ctx Context, defs map[string]string) string {
 				props := ctx.Metadata()[obj]
 				tabs := obj.(*container.AppTabs)
 				str := &strings.Builder{}
@@ -254,7 +254,7 @@ func initContainers() {
 
 				return widgetRef(obj, ctx, defs, str.String())
 			},
-			Packages: func(obj fyne.CanvasObject, _ Context) []string {
+			Packages: func(obj granio.CanvasObject, _ Context) []string {
 				tabs := obj.(*container.AppTabs)
 				for _, c := range tabs.Items {
 					if c.Icon != nil {
@@ -266,22 +266,22 @@ func initContainers() {
 		},
 		"*container.Clip": {
 			Name: "Clip",
-			Children: func(o fyne.CanvasObject) []fyne.CanvasObject {
+			Children: func(o granio.CanvasObject) []granio.CanvasObject {
 				c := o.(*container.Clip)
-				return []fyne.CanvasObject{c.Content}
+				return []granio.CanvasObject{c.Content}
 			},
-			AddChild: func(parent, o fyne.CanvasObject) {
+			AddChild: func(parent, o granio.CanvasObject) {
 				c := parent.(*container.Clip)
 				c.Content = o
 				c.Refresh()
 			},
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return container.NewClip(container.NewStack())
 			},
-			Edit: func(obj fyne.CanvasObject, c Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 				return []*widget.FormItem{}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				clip := obj.(*container.Clip)
 				str := &strings.Builder{}
 
@@ -291,25 +291,25 @@ func initContainers() {
 
 				return widgetRef(obj, c, defs, str.String())
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"container"}
 			},
 		},
 		"*container.Navigation": {
 			Name: "Navigation",
-			Children: func(o fyne.CanvasObject) []fyne.CanvasObject {
+			Children: func(o granio.CanvasObject) []granio.CanvasObject {
 				nav := o.(*container.Navigation)
-				return []fyne.CanvasObject{nav.Root}
+				return []granio.CanvasObject{nav.Root}
 			},
-			AddChild: func(parent, o fyne.CanvasObject) {
+			AddChild: func(parent, o granio.CanvasObject) {
 				scr := parent.(*container.Navigation)
 				scr.Root = o
 				scr.Refresh()
 			},
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return container.NewNavigation(container.NewStack())
 			},
-			Edit: func(obj fyne.CanvasObject, c Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 				nav := obj.(*container.Navigation)
 				title := widget.NewEntry()
 				title.SetText(nav.Title)
@@ -320,7 +320,7 @@ func initContainers() {
 					widget.NewFormItem("Title", title),
 				}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				n := obj.(*container.Navigation)
 				str := &strings.Builder{}
 
@@ -336,25 +336,25 @@ func initContainers() {
 
 				return widgetRef(obj, c, defs, str.String())
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"container"}
 			},
 		},
 		"*container.Scroll": {
 			Name: "Scroll",
-			Children: func(o fyne.CanvasObject) []fyne.CanvasObject {
+			Children: func(o granio.CanvasObject) []granio.CanvasObject {
 				scr := o.(*container.Scroll)
-				return []fyne.CanvasObject{scr.Content}
+				return []granio.CanvasObject{scr.Content}
 			},
-			AddChild: func(parent, o fyne.CanvasObject) {
+			AddChild: func(parent, o granio.CanvasObject) {
 				scr := parent.(*container.Scroll)
 				scr.Content = o
 				scr.Refresh()
 			},
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return container.NewScroll(container.NewStack())
 			},
-			Edit: func(obj fyne.CanvasObject, c Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), _ func()) []*widget.FormItem {
 				scroll := obj.(*container.Scroll)
 				dirVert := widget.NewCheck("", func(on bool) {
 					isHorizontal := scroll.Direction == container.ScrollBoth || scroll.Direction == container.ScrollHorizontalOnly
@@ -399,7 +399,7 @@ func initContainers() {
 					widget.NewFormItem("Scroll Horizontal", dirHoriz),
 				}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				s := obj.(*container.Scroll)
 				str := &strings.Builder{}
 
@@ -415,17 +415,17 @@ func initContainers() {
 
 				return widgetRef(obj, c, defs, str.String())
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"container"}
 			},
 		},
 		"*container.Split": {
 			Name: "Split",
-			Children: func(o fyne.CanvasObject) []fyne.CanvasObject {
+			Children: func(o granio.CanvasObject) []granio.CanvasObject {
 				split := o.(*container.Split)
-				return []fyne.CanvasObject{split.Leading, split.Trailing}
+				return []granio.CanvasObject{split.Leading, split.Trailing}
 			},
-			AddChild: func(parent, o fyne.CanvasObject) {
+			AddChild: func(parent, o granio.CanvasObject) {
 				split := parent.(*container.Split)
 				if split.Leading == nil {
 					split.Leading = o
@@ -434,10 +434,10 @@ func initContainers() {
 				}
 				split.Refresh()
 			},
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return container.NewHSplit(container.NewStack(), container.NewStack())
 			},
-			Edit: func(obj fyne.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				split := obj.(*container.Split)
 				offset := widget.NewEntry()
 				offset.SetText(fmt.Sprintf("%f", split.Offset))
@@ -459,7 +459,7 @@ func initContainers() {
 					widget.NewFormItem("Vertical", vert),
 				}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				s := obj.(*container.Split)
 				str := &strings.Builder{}
 				str.WriteString(fmt.Sprintf("&container.Split{Horizontal: %t, Offset: %f, Leading: ", s.Horizontal, s.Offset))
@@ -469,25 +469,25 @@ func initContainers() {
 				str.WriteString("}")
 				return widgetRef(obj, c, defs, str.String())
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"container"}
 			},
 		},
 		"*container.ThemeOverride": {
 			Name: "ThemeOverride",
-			Children: func(o fyne.CanvasObject) []fyne.CanvasObject {
+			Children: func(o granio.CanvasObject) []granio.CanvasObject {
 				over := o.(*container.ThemeOverride)
-				return []fyne.CanvasObject{over.Content}
+				return []granio.CanvasObject{over.Content}
 			},
-			AddChild: func(parent, o fyne.CanvasObject) {
+			AddChild: func(parent, o granio.CanvasObject) {
 				over := o.(*container.ThemeOverride)
 				over.Content = o
 				over.Refresh()
 			},
-			Create: func(c Context) fyne.CanvasObject {
+			Create: func(c Context) granio.CanvasObject {
 				return container.NewThemeOverride(container.NewStack(), c.Theme())
 			},
-			Edit: func(obj fyne.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				props := c.Metadata()[obj]
 				over := obj.(*container.ThemeOverride)
 				custom := widget.NewMultiLineEntry()
@@ -508,19 +508,19 @@ func initContainers() {
 					widget.NewFormItem("Theme Data", custom),
 				}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				props := c.Metadata()[obj]
 				over := obj.(*container.ThemeOverride)
 				str := &strings.Builder{}
 				str.WriteString("container.NewThemeOverride(")
 				writeGoStringExcluding(str, nil, c, defs, over.Content)
 				str.WriteString(", ")
-				str.WriteString("func() fyne.Theme { th, _ := theme.FromJSONWithFallback(`")
+				str.WriteString("func() granio.Theme { th, _ := theme.FromJSONWithFallback(`")
 				str.WriteString(props["data"])
-				str.WriteString("`, fyne.CurrentApp().Settings().Theme()); return th}())")
+				str.WriteString("`, granio.CurrentApp().Settings().Theme()); return th}())")
 				return widgetRef(obj, c, defs, str.String())
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"container", "theme"}
 			},
 		},

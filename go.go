@@ -10,15 +10,15 @@ import (
 	"strconv"
 	"strings"
 
-	"fyne.io/fyne/v2/container"
-	"github.com/fyne-io/refyne/internal/guidefs"
-	"github.com/fyne-io/refyne/internal/tools"
+	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
+	"github.com/Uzer007-admin/granio-ui/internal/tools"
+	"github.com/Uzer007-admin/granio/v2/container"
 
-	"fyne.io/fyne/v2"
+	"github.com/Uzer007-admin/granio/v2"
 )
 
 // ExportGo generates a full Go package for the given object and writes it to the provided file handle
-func ExportGo(obj fyne.CanvasObject, d Context, name string, w io.Writer) error {
+func ExportGo(obj granio.CanvasObject, d Context, name string, w io.Writer) error {
 	guidefs.InitOnce()
 
 	tools.VarNames.Reset()
@@ -37,7 +37,7 @@ func ExportGo(obj fyne.CanvasObject, d Context, name string, w io.Writer) error 
 }
 
 // ExportGoPreview generates a preview version of the Go code with a `main()` method for the given object and writes it to the file handle
-func ExportGoPreview(obj fyne.CanvasObject, d Context, w io.Writer) error {
+func ExportGoPreview(obj granio.CanvasObject, d Context, w io.Writer) error {
 	guidefs.InitOnce()
 
 	packagesList := packagesRequired(obj, d)
@@ -65,23 +65,23 @@ func main() {
 	return err
 }
 
-func countContainers(obj fyne.CanvasObject) int {
-	var children []fyne.CanvasObject
+func countContainers(obj granio.CanvasObject) int {
+	var children []granio.CanvasObject
 	switch c := obj.(type) {
-	case *fyne.Container:
+	case *granio.Container:
 		children = c.Objects
 	case *container.AppTabs:
-		children = make([]fyne.CanvasObject, len(c.Items))
+		children = make([]granio.CanvasObject, len(c.Items))
 		for i, c := range c.Items {
 			children[i] = c.Content
 		}
 	case *container.DocTabs:
-		children = make([]fyne.CanvasObject, len(c.Items))
+		children = make([]granio.CanvasObject, len(c.Items))
 		for i, c := range c.Items {
 			children[i] = c.Content
 		}
 	case *container.Scroll:
-		children = []fyne.CanvasObject{c.Content}
+		children = []granio.CanvasObject{c.Content}
 	default:
 		return 0
 	}
@@ -110,22 +110,22 @@ func stringMapToSlice(m map[string]string, fn func(a, b string) bool) []string {
 	return r
 }
 
-func exportCode(pkgs, vars []string, obj fyne.CanvasObject, d Context, name string) string {
+func exportCode(pkgs, vars []string, obj granio.CanvasObject, d Context, name string) string {
 	for i := 0; i < len(pkgs); i++ {
 		if pkgs[i] == "xWidget" {
-			pkgs[i] = `xWidget	"fyne.io/x/fyne/widget"`
+			pkgs[i] = `xWidget	"github.com/Uzer007-admin/granio-x/widget"`
 
 			continue
 		}
 
 		if pkgs[i] != "fmt" && !strings.Contains(pkgs[i], "/") {
-			pkgs[i] = "fyne.io/fyne/v2/" + pkgs[i]
+			pkgs[i] = "github.com/Uzer007-admin/granio/v2/" + pkgs[i]
 		}
 
 		pkgs[i] = fmt.Sprintf(`	"%s"`, pkgs[i])
 	}
 
-	battrs := make(map[fyne.CanvasObject][]string)
+	battrs := make(map[granio.CanvasObject][]string)
 	for obj, attrs := range d.Attrs() {
 		battrs[obj] = attrs
 	}
@@ -221,19 +221,19 @@ func exportCode(pkgs, vars []string, obj fyne.CanvasObject, d Context, name stri
 		guiNameUpper = strings.ToUpper(string([]byte{name[0]})) + name[1:]
 	} else {
 		layoutHelper = `type wrappedLayout struct {
-	layout  func([]fyne.CanvasObject, fyne.Size)
-	minSize func([]fyne.CanvasObject) fyne.Size
+	layout  func([]granio.CanvasObject, granio.Size)
+	minSize func([]granio.CanvasObject) granio.Size
 }
 
-func (w wrappedLayout) Layout(objs []fyne.CanvasObject, s fyne.Size) {
+func (w wrappedLayout) Layout(objs []granio.CanvasObject, s granio.Size) {
 	w.layout(objs, s)
 }
 
-func (w wrappedLayout) MinSize(objs []fyne.CanvasObject) fyne.Size {
+func (w wrappedLayout) MinSize(objs []granio.CanvasObject) granio.Size {
 	return w.minSize(objs)
 }
 
-func wrapLayout(l func([]fyne.CanvasObject, fyne.Size), m func([]fyne.CanvasObject) fyne.Size) fyne.Layout {
+func wrapLayout(l func([]granio.CanvasObject, granio.Size), m func([]granio.CanvasObject) granio.Size) granio.Layout {
 	return wrappedLayout{layout: l, minSize: m}
 }`
 	}
@@ -265,7 +265,7 @@ func wrapLayout(l func([]fyne.CanvasObject, fyne.Size), m func([]fyne.CanvasObje
 package main
 
 import (
-	"fyne.io/fyne/v2"
+	"github.com/Uzer007-admin/granio/v2"
 {{- range .Pkgs }}
 	{{.}}
 {{- end }}
@@ -274,7 +274,7 @@ import (
 {{.LayoutHelper}}
 
 type {{.GuiName}} struct {
-	win fyne.Window
+	win granio.Window
 
 {{ range .Vars }}
 	{{.}}
@@ -285,7 +285,7 @@ func new{{.GuiNameUpper}}GUI() *{{.GuiName}} {
 	return &{{.GuiName}}{}
 }
 
-func (g *{{.GuiName}}) makeUI() fyne.CanvasObject {
+func (g *{{.GuiName}}) makeUI() granio.CanvasObject {
 	{{ range .SetupBefore -}}
 	{{.}}
 	{{ end -}}
@@ -300,22 +300,22 @@ func (g *{{.GuiName}}) makeUI() fyne.CanvasObject {
 	return {{.Main}}
 }`, data)
 	if err != nil {
-		fyne.LogError("Failed to generate GUI code", err)
+		granio.LogError("Failed to generate GUI code", err)
 		return code
 	}
 
 	formatted, err := format.Source([]byte(code))
 	if err != nil {
-		fyne.LogError("Failed to format GUI code", err)
+		granio.LogError("Failed to format GUI code", err)
 		return code
 	}
 	return string(formatted)
 }
 
-func packagesRequired(obj fyne.CanvasObject, d Context) []string {
+func packagesRequired(obj granio.CanvasObject, d Context) []string {
 	ret := []string{"container"}
-	var objs []fyne.CanvasObject
-	if c, ok := obj.(*fyne.Container); ok {
+	var objs []granio.CanvasObject
+	if c, ok := obj.(*granio.Container); ok {
 		objs = c.Objects
 		layout, ok := d.Metadata()[c]["layout"]
 		if ok && (layout == "Form" || layout == "CustomPadded" || layout == "GridWrap") {
@@ -350,25 +350,25 @@ func packagesRequired(obj fyne.CanvasObject, d Context) []string {
 	return ret
 }
 
-func packagesRequiredForWidget(w fyne.CanvasObject, d Context) []string {
+func packagesRequiredForWidget(w granio.CanvasObject, d Context) []string {
 	_, name := getTypeOf(w)
 	if pkgs := guidefs.Lookup(name).Packages; pkgs != nil {
 		return pkgs(w, d)
 	}
 
-	if _, ok := w.(fyne.Widget); ok {
+	if _, ok := w.(granio.Widget); ok {
 		return []string{"widget"}
 	}
 
 	return []string{}
 }
 
-func varsRequired(obj fyne.CanvasObject, d Context) (widgets, containers []string) {
+func varsRequired(obj granio.CanvasObject, d Context) (widgets, containers []string) {
 	name := d.Metadata()[obj]["name"]
 
-	if c, ok := obj.(*fyne.Container); ok {
+	if c, ok := obj.(*granio.Container); ok {
 		if name != "" {
-			containers = append(containers, name+" *fyne.Container")
+			containers = append(containers, name+" *granio.Container")
 		}
 
 		for _, w := range c.Objects {

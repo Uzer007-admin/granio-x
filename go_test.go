@@ -5,10 +5,10 @@ import (
 	"sort"
 	"testing"
 
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 
-	"github.com/fyne-io/refyne/internal/tools"
+	"github.com/Uzer007-admin/granio-ui/internal/tools"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,30 +38,30 @@ package main
 
 import (
 	"fmt"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 
 	bubu *widget.Button
 	lili *widget.List
-	coco *fyne.Container
+	coco *granio.Container
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 	g.bubu = widget.NewButton("", nil)
 	g.lili = widget.NewList(func() int {
 		return 5
-	}, func() fyne.CanvasObject {
+	}, func() granio.CanvasObject {
 		return widget.NewLabel("Template Object")
-	}, func(id widget.ListItemID, item fyne.CanvasObject) {
+	}, func(id widget.ListItemID, item granio.CanvasObject) {
 		item.(*widget.Label).SetText(fmt.Sprintf("Item %d", id+1))
 	})
 	g.coco = container.NewVBox(
@@ -97,23 +97,23 @@ func TestExportGoButton(t *testing.T) {
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 
 	bubu *widget.Button
-	coco *fyne.Container
+	coco *granio.Container
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 	g.bubu = widget.NewButton("Foo", nil)
 	g.coco = container.NewVBox(
 		g.bubu)
@@ -149,23 +149,23 @@ func TestExportGoEntry(t *testing.T) {
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 
 	enen *widget.Entry
-	coco *fyne.Container
+	coco *granio.Container
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 	g.enen = widget.NewEntry()
 	g.coco = container.NewVBox(
 		g.enen)
@@ -202,22 +202,22 @@ func TestExportGoWithoutId(t *testing.T) {
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 
-	coco *fyne.Container
+	coco *granio.Container
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 	{{.}} := widget.NewEntry()
 	g.coco = container.NewVBox(
 		{{.}})
@@ -284,22 +284,22 @@ func TestExportGoWithoutIds(t *testing.T) {
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 
-	coco *fyne.Container
+	coco *granio.Container
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 	button1 := widget.NewButton("Foo", nil)
 	entry1 := widget.NewEntry()
 	g.coco = container.NewVBox(
@@ -338,20 +338,20 @@ func TestExportGoWithAppTabs(t *testing.T) {
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 	{{.}} := widget.NewEntry()
 
 	{{.}}.PlaceHolder = "Something goes here"
@@ -420,23 +420,23 @@ func TestExportGoMultipleTimes(t *testing.T) {
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 
 	bubu *widget.Button
-	coco *fyne.Container
+	coco *granio.Container
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 	g.bubu = widget.NewButton("Foo", nil)
 	g.coco = container.NewVBox(
 		g.bubu)
@@ -479,20 +479,20 @@ func TestExportGoSlider(t *testing.T) {
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 
 	return container.NewVBox(
 		&widget.Slider{Min: 0.000000, Max: 1.000000, Value: 0.500000, Step: 0.010000, Orientation: widget.Horizontal})
@@ -523,20 +523,20 @@ func TestExportGoForm(t *testing.T) {
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 type whatGui struct {
-	win fyne.Window
+	win granio.Window
 }
 
 func newWhatGUI() *whatGui {
 	return &whatGui{}
 }
 
-func (g *whatGui) makeUI() fyne.CanvasObject {
+func (g *whatGui) makeUI() granio.CanvasObject {
 
 	return container.NewVBox(
 		&widget.Form{Items: []*widget.FormItem{widget.NewFormItem("Foo",

@@ -1,9 +1,9 @@
 package refyne
 
 import (
-	"fyne.io/fyne/v2"
+	"github.com/Uzer007-admin/granio/v2"
 
-	"github.com/fyne-io/refyne/internal/guidefs"
+	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
 )
 
 // WidgetInfo contains the name and corresponding functions for the widget type
@@ -64,7 +64,7 @@ func RegisterWidget(info WidgetInfo) {
 }
 
 // DropZonesForObject returns the children of a container that can be used as drag and drop target zones
-func DropZonesForObject(o fyne.CanvasObject) []fyne.CanvasObject {
+func DropZonesForObject(o granio.CanvasObject) []granio.CanvasObject {
 	class := guidefs.TypeName(o)
 	info := guidefs.Lookup(class)
 

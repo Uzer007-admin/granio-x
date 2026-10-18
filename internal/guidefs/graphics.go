@@ -11,12 +11,12 @@ import (
 	"strconv"
 	"strings"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/canvas"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/data/binding"
+	"github.com/Uzer007-admin/granio/v2/dialog"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 var (
@@ -31,12 +31,12 @@ func initGraphics() {
 	Graphics = map[string]WidgetInfo{
 		"*canvas.Arc": {
 			Name: "Arc",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				rect := canvas.NewArc(0, 90, 0.5, color.Black)
 				rect.StrokeColor = color.Black
 				return rect
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				a := obj.(*canvas.Arc)
 				return []*widget.FormItem{
 					widget.NewFormItem("Start Angle", newIntSliderButton(float64(a.StartAngle), -360, 360, func(f float64) {
@@ -77,18 +77,18 @@ func initGraphics() {
 					})),
 				}
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"canvas", "image/color"}
 			},
 		},
 		"*canvas.Circle": {
 			Name: "Circle",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				rect := canvas.NewCircle(color.Black)
 				rect.StrokeColor = color.Black
 				return rect
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				r := obj.(*canvas.Circle)
 				return []*widget.FormItem{
 					widget.NewFormItem("Fill", newColorButton(r.FillColor, func(c color.Color) {
@@ -108,17 +108,17 @@ func initGraphics() {
 					})),
 				}
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"canvas", "image/color"}
 			},
 		},
 		"*canvas.Image": initImageGraphic(),
 		"*canvas.LinearGradient": {
 			Name: "LinearGradient",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return &canvas.LinearGradient{StartColor: color.White}
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				r := obj.(*canvas.LinearGradient)
 				angleSlide := widget.NewSlider(0, 360)
 				angleSlide.Step = 90
@@ -141,18 +141,18 @@ func initGraphics() {
 					widget.NewFormItem("Angle", angleSlide),
 				}
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"canvas", "image/color"}
 			},
 		},
 		"*canvas.Polygon": {
 			Name: "Polygon",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				rect := canvas.NewPolygon(5, color.Black)
 				rect.StrokeColor = color.Black
 				return rect
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				p := obj.(*canvas.Polygon)
 				return []*widget.FormItem{
 					widget.NewFormItem("Sides", newIntSliderButton(float64(p.Sides), 3, 18, func(f float64) {
@@ -188,16 +188,16 @@ func initGraphics() {
 					})),
 				}
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"canvas", "image/color"}
 			},
 		},
 		"*canvas.RadialGradient": {
 			Name: "RadialGradient",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				return &canvas.RadialGradient{StartColor: color.White}
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				r := obj.(*canvas.RadialGradient)
 				return []*widget.FormItem{
 					widget.NewFormItem("Start", newColorButton(r.StartColor, func(c color.Color) {
@@ -212,18 +212,18 @@ func initGraphics() {
 					})),
 				}
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"canvas", "image/color"}
 			},
 		},
 		"*canvas.Rectangle": {
 			Name: "Rectangle",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				rect := canvas.NewRectangle(color.Black)
 				rect.StrokeColor = color.Black
 				return rect
 			},
-			Edit: func(obj fyne.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				r := obj.(*canvas.Rectangle)
 				props := c.Metadata()[obj]
 
@@ -263,7 +263,7 @@ func initGraphics() {
 						props["minHeight"] = minHeightInput.Text
 					}
 
-					r.SetMinSize(fyne.NewSize(float32(w), float32(h)))
+					r.SetMinSize(granio.NewSize(float32(w), float32(h)))
 					onchanged()
 				}
 				minWidthInput.OnChanged = updateMin
@@ -304,7 +304,7 @@ func initGraphics() {
 					widget.NewFormItem("Min Height", minHeightInput),
 				}
 			},
-			Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 				props := c.Metadata()[obj]
 				minWidth := props["minWidth"]
 				minHeight := props["minHeight"]
@@ -320,17 +320,17 @@ func initGraphics() {
 				}
 				return widgetRef(obj, c, defs, code)
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"canvas", "image/color"}
 			},
 		},
 		"*canvas.Text": {
 			Name: "Text",
-			Create: func(Context) fyne.CanvasObject {
+			Create: func(Context) granio.CanvasObject {
 				rect := canvas.NewText("Text", color.Black)
 				return rect
 			},
-			Edit: func(obj fyne.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 				t := obj.(*canvas.Text)
 				e := widget.NewEntry()
 				e.SetText(t.Text)
@@ -376,7 +376,7 @@ func initGraphics() {
 					widget.NewFormItem("Monospace", mono),
 				}
 			},
-			Packages: func(_ fyne.CanvasObject, _ Context) []string {
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
 				return []string{"canvas", "image/color"}
 			},
 		},
@@ -388,10 +388,10 @@ func initGraphics() {
 func initImageGraphic() WidgetInfo {
 	return WidgetInfo{
 		Name: "Image",
-		Create: func(Context) fyne.CanvasObject {
+		Create: func(Context) granio.CanvasObject {
 			return &canvas.Image{}
 		},
-		Edit: func(obj fyne.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+		Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 			i := obj.(*canvas.Image)
 			props := c.Metadata()[obj]
 
@@ -431,7 +431,7 @@ func initImageGraphic() WidgetInfo {
 					props["minHeight"] = minHeightInput.Text
 				}
 
-				i.SetMinSize(fyne.NewSize(float32(w), float32(h)))
+				i.SetMinSize(granio.NewSize(float32(w), float32(h)))
 				onchanged()
 			}
 			minWidthInput.OnChanged = updateMin
@@ -463,7 +463,7 @@ func initImageGraphic() WidgetInfo {
 				pathSelect.SetText(filepath.Base(i.File))
 			}
 			pathSelect.OnTapped = func() {
-				dialog.ShowFileOpen(func(r fyne.URIReadCloser, err error) {
+				dialog.ShowFileOpen(func(r granio.URIReadCloser, err error) {
 					path := ""
 					if r != nil && err == nil {
 						_ = r.Close()
@@ -483,10 +483,10 @@ func initImageGraphic() WidgetInfo {
 					}
 					i.Refresh()
 					onchanged()
-				}, fyne.CurrentApp().Driver().AllWindows()[0])
+				}, granio.CurrentApp().Driver().AllWindows()[0])
 			}
 
-			resSelect := newIconSelectorButton(i.Resource, func(res fyne.Resource) {
+			resSelect := newIconSelectorButton(i.Resource, func(res granio.Resource) {
 				i.Resource = res
 				i.Refresh()
 				onchanged()
@@ -502,14 +502,14 @@ func initImageGraphic() WidgetInfo {
 				widget.NewFormItem("Min Height", minHeightInput),
 			}
 		},
-		Packages: func(obj fyne.CanvasObject, _ Context) []string {
+		Packages: func(obj granio.CanvasObject, _ Context) []string {
 			i := obj.(*canvas.Image)
 			if i.Resource != nil {
 				return []string{"canvas", "theme"}
 			}
 			return []string{"canvas"}
 		},
-		Gostring: func(obj fyne.CanvasObject, c Context, defs map[string]string) string {
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
 			i := obj.(*canvas.Image)
 			props := c.Metadata()[obj]
 			minWidth := props["minWidth"]
@@ -548,9 +548,9 @@ func initImageGraphic() WidgetInfo {
 	}
 }
 
-func newColorButton(c color.Color, fn func(color.Color)) fyne.CanvasObject {
+func newColorButton(c color.Color, fn func(color.Color)) granio.CanvasObject {
 	// TODO get the window passed in somehow
-	w := fyne.CurrentApp().Driver().AllWindows()[0]
+	w := granio.CurrentApp().Driver().AllWindows()[0]
 
 	input := widget.NewEntry()
 	input.SetText(formatColor(c))
@@ -573,23 +573,23 @@ type colorTapper struct {
 
 	r   *canvas.Rectangle
 	fn  func(color.Color)
-	win fyne.Window
+	win granio.Window
 }
 
-func newColorTapper(c color.Color, fn func(color.Color), win fyne.Window) *colorTapper {
+func newColorTapper(c color.Color, fn func(color.Color), win granio.Window) *colorTapper {
 	preview := canvas.NewRectangle(c)
-	preview.SetMinSize(fyne.NewSquareSize(32))
+	preview.SetMinSize(granio.NewSquareSize(32))
 
 	t := &colorTapper{r: preview, fn: fn, win: win}
 	t.ExtendBaseWidget(t)
 	return t
 }
 
-func (c *colorTapper) CreateRenderer() fyne.WidgetRenderer {
+func (c *colorTapper) CreateRenderer() granio.WidgetRenderer {
 	return widget.NewSimpleRenderer(c.r)
 }
 
-func (c *colorTapper) Tapped(_ *fyne.PointEvent) {
+func (c *colorTapper) Tapped(_ *granio.PointEvent) {
 	d := dialog.NewColorPicker("Choose Color", "Pick a color", c.fn, c.win)
 	d.Advanced = true
 	d.SetColor(c.r.FillColor)
@@ -601,15 +601,15 @@ func (c *colorTapper) setColor(col color.Color) {
 	c.r.Refresh()
 }
 
-func newIntSliderButton(f float64, start, end float64, fn func(float64)) fyne.CanvasObject {
+func newIntSliderButton(f float64, start, end float64, fn func(float64)) granio.CanvasObject {
 	return newSliderButtonWithConversion(f, start, end, 1, "%0.0f", fn)
 }
 
-func newRatioSliderButton(f float64, start, end float64, fn func(float64)) fyne.CanvasObject {
+func newRatioSliderButton(f float64, start, end float64, fn func(float64)) granio.CanvasObject {
 	return newSliderButtonWithConversion(f, start, end, 0.01, "%0.2f", fn)
 }
 
-func newSliderButtonWithConversion(f float64, start, end, step float64, format string, fn func(float64)) fyne.CanvasObject {
+func newSliderButtonWithConversion(f float64, start, end, step float64, format string, fn func(float64)) granio.CanvasObject {
 	input := widget.NewEntry()
 	input.SetText(strconv.Itoa(int(f)))
 	slide := widget.NewSlider(start, end)

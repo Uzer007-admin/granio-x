@@ -4,15 +4,15 @@ import (
 	"reflect"
 	"strconv"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/data/binding"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/data/binding"
+	"github.com/Uzer007-admin/granio/v2/widget"
 
-	"github.com/fyne-io/refyne/internal/guidefs"
+	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
 )
 
 // CreateNew returns a new instance of the given widget type
-func CreateNew(name string, d Context) fyne.CanvasObject {
+func CreateNew(name string, d Context) granio.CanvasObject {
 	guidefs.InitOnce()
 
 	if match := guidefs.Lookup(name); match != nil {
@@ -24,7 +24,7 @@ func CreateNew(name string, d Context) fyne.CanvasObject {
 
 // EditorFor returns an array of FormItems for editing, taking the widget, properties, callback to refresh the form items,
 // and an optional callback that fires after changes to the widget.
-func EditorFor(o fyne.CanvasObject, d Context, refresh func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+func EditorFor(o granio.CanvasObject, d Context, refresh func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
 	guidefs.InitOnce()
 
 	_, clazz := getTypeOf(o)
@@ -35,7 +35,7 @@ func EditorFor(o fyne.CanvasObject, d Context, refresh func([]*widget.FormItem),
 
 	appendManualItems := func(items []*widget.FormItem) []*widget.FormItem {
 		parent := ContainerOf(o, d)
-		if c, ok := parent.(*fyne.Container); ok {
+		if c, ok := parent.(*granio.Container); ok {
 			without := c.Layout == nil
 			if !without {
 				if l, ok := c.Layout.(interface{ WithoutLayout() bool }); ok && l.WithoutLayout() {
@@ -64,7 +64,7 @@ func EditorFor(o fyne.CanvasObject, d Context, refresh func([]*widget.FormItem),
 }
 
 // GoStringFor generates the Go code for the given widget
-func GoStringFor(o fyne.CanvasObject, d Context, defs map[string]string) string {
+func GoStringFor(o granio.CanvasObject, d Context, defs map[string]string) string {
 	guidefs.InitOnce()
 
 	name, _ := getTypeOf(o)
@@ -76,7 +76,7 @@ func GoStringFor(o fyne.CanvasObject, d Context, defs map[string]string) string 
 	return ""
 }
 
-func getTypeOf(o fyne.CanvasObject) (string, string) {
+func getTypeOf(o granio.CanvasObject) (string, string) {
 	class := guidefs.TypeName(o)
 	name := NameOf(o)
 
@@ -84,7 +84,7 @@ func getTypeOf(o fyne.CanvasObject) (string, string) {
 }
 
 // NameOf returns the name for a given object
-func NameOf(o fyne.CanvasObject) string {
+func NameOf(o granio.CanvasObject) string {
 	typeName := reflect.TypeOf(o).Elem().Name()
 	l := reflect.ValueOf(o).Elem()
 	if typeName == "Entry" {
@@ -98,23 +98,23 @@ func NameOf(o fyne.CanvasObject) string {
 	return typeName
 }
 
-func manualLayoutItems(o fyne.CanvasObject, props map[string]string) []*widget.FormItem {
+func manualLayoutItems(o granio.CanvasObject, props map[string]string) []*widget.FormItem {
 	header := widget.NewFormItem("Layout", widget.NewLabel(""))
 	header.HintText = "(manual, static)"
 
 	return []*widget.FormItem{
 		header,
 		widget.NewFormItem("X", float32Entry(o.Position().X, "x", props, func(f float32) {
-			o.Move(fyne.NewPos(f, o.Position().Y))
+			o.Move(granio.NewPos(f, o.Position().Y))
 		})),
 		widget.NewFormItem("Y", float32Entry(o.Position().Y, "y", props, func(f float32) {
-			o.Move(fyne.NewPos(o.Position().X, f))
+			o.Move(granio.NewPos(o.Position().X, f))
 		})),
 		widget.NewFormItem("Width", float32Entry(o.Size().Width, "width", props, func(f float32) {
-			o.Resize(fyne.NewSize(f, o.Size().Height))
+			o.Resize(granio.NewSize(f, o.Size().Height))
 		})),
 		widget.NewFormItem("Height", float32Entry(o.Size().Height, "height", props, func(f float32) {
-			o.Resize(fyne.NewSize(o.Size().Width, f))
+			o.Resize(granio.NewSize(o.Size().Width, f))
 		})),
 	}
 }

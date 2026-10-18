@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"fyne.io/fyne/v2"
+	"github.com/Uzer007-admin/granio/v2"
 )
 
 // VarNames is a shared generator instance for variable names from CanvasObjects.
@@ -14,7 +14,7 @@ var VarNames = NewVarNameGen()
 // VarNameGen is a variable name generator that groups and counts objects by type
 // and remembers the names returned for a given object.
 type VarNameGen struct {
-	m map[fyne.CanvasObject]string
+	m map[granio.CanvasObject]string
 	c map[string]int
 }
 
@@ -27,13 +27,13 @@ func NewVarNameGen() *VarNameGen {
 
 // Reset allocates a new and empty internal state.
 func (vn *VarNameGen) Reset() {
-	vn.m = make(map[fyne.CanvasObject]string)
+	vn.m = make(map[granio.CanvasObject]string)
 	vn.c = make(map[string]int)
 }
 
 // Get returns the variable name for a given object, and remembers previous
 // values to maintain stable results.
-func (vn *VarNameGen) Get(obj fyne.CanvasObject) string {
+func (vn *VarNameGen) Get(obj granio.CanvasObject) string {
 	if name, found := vn.m[obj]; found {
 		return name
 	}

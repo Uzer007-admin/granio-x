@@ -3,10 +3,10 @@ package guidefs
 import (
 	"strings"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/canvas"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/widget"
 )
 
 func directionName(d container.ScrollDirection) string {
@@ -41,10 +41,10 @@ func escapeLabel(inStr string) (outStr string) {
 	return
 }
 
-func newIconSelectorButton(ic fyne.Resource, fn func(fyne.Resource), showName bool) (iconSel *widget.Button) {
-	items := make([]*fyne.MenuItem, len(IconNames)+1)
+func newIconSelectorButton(ic granio.Resource, fn func(granio.Resource), showName bool) (iconSel *widget.Button) {
+	items := make([]*granio.MenuItem, len(IconNames)+1)
 
-	items[0] = &fyne.MenuItem{
+	items[0] = &granio.MenuItem{
 		Label: noIconLabel,
 		Icon:  nil,
 		Action: func() {
@@ -55,7 +55,7 @@ func newIconSelectorButton(ic fyne.Resource, fn func(fyne.Resource), showName bo
 	}
 	for i, n := range IconNames {
 		name := n
-		items[i+1] = &fyne.MenuItem{
+		items[i+1] = &granio.MenuItem{
 			Label: n,
 			Icon:  Icons[n],
 			Action: func() {
@@ -70,10 +70,10 @@ func newIconSelectorButton(ic fyne.Resource, fn func(fyne.Resource), showName bo
 		}
 	}
 	iconSel = widget.NewButton(noIconLabel, func() {
-		d := fyne.CurrentApp().Driver()
+		d := granio.CurrentApp().Driver()
 		c := d.CanvasForObject(iconSel)
 		p := d.AbsolutePositionForObject(iconSel).AddXY(0, iconSel.Size().Height)
-		widget.NewPopUpMenu(fyne.NewMenu("", items...), c).ShowAtPosition(p)
+		widget.NewPopUpMenu(granio.NewMenu("", items...), c).ShowAtPosition(p)
 	})
 	if ic != nil {
 		name := IconName(ic)
@@ -93,7 +93,7 @@ func newIconSelectorButton(ic fyne.Resource, fn func(fyne.Resource), showName bo
 	return iconSel
 }
 
-func getFormIndex(obj fyne.CanvasObject, list []*widget.FormItem) int {
+func getFormIndex(obj granio.CanvasObject, list []*widget.FormItem) int {
 	for i, item := range list {
 		if item.Widget == obj {
 			return i

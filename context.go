@@ -1,55 +1,55 @@
 package refyne
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/theme"
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/theme"
 
-	"github.com/fyne-io/refyne/internal/guidefs"
+	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
 )
 
 // Context defines a graphical builder context that contains metadata and theme information.
 type Context = guidefs.Context
 
 type context struct {
-	meta map[fyne.CanvasObject]map[string]string
-	attr map[fyne.CanvasObject][]string
-	root fyne.CanvasObject
+	meta map[granio.CanvasObject]map[string]string
+	attr map[granio.CanvasObject][]string
+	root granio.CanvasObject
 }
 
 // DefaultContext returns a simple context with an empty metadata map that will
 // defer to the default theme for theming information.
 func DefaultContext() Context {
 	return &context{
-		meta: make(map[fyne.CanvasObject]map[string]string),
-		attr: make(map[fyne.CanvasObject][]string),
+		meta: make(map[granio.CanvasObject]map[string]string),
+		attr: make(map[granio.CanvasObject][]string),
 	}
 }
 
-func (c *context) Metadata() map[fyne.CanvasObject]map[string]string {
+func (c *context) Metadata() map[granio.CanvasObject]map[string]string {
 	return c.meta
 }
 
-func (c *context) Attrs() map[fyne.CanvasObject][]string {
+func (c *context) Attrs() map[granio.CanvasObject][]string {
 	return c.attr
 }
 
-func (c *context) Root() fyne.CanvasObject {
+func (c *context) Root() granio.CanvasObject {
 	return c.root
 }
 
-func (c *context) Theme() fyne.Theme {
+func (c *context) Theme() granio.Theme {
 	return theme.DefaultTheme()
 }
 
 // ContainerOf returns the parent of the given CanvasObject, in the specified Context.
 // The returned object will be in the tree descended from `c.Root()`, or nil.
-func ContainerOf(obj fyne.CanvasObject, c Context) fyne.CanvasObject {
+func ContainerOf(obj granio.CanvasObject, c Context) granio.CanvasObject {
 	return containerOf(obj, c.Root())
 }
 
-func containerOf(obj fyne.CanvasObject, root fyne.CanvasObject) fyne.CanvasObject {
+func containerOf(obj granio.CanvasObject, root granio.CanvasObject) granio.CanvasObject {
 	switch c := root.(type) {
-	case *fyne.Container:
+	case *granio.Container:
 		for _, w := range c.Objects {
 			if w == obj {
 				return root
@@ -61,7 +61,7 @@ func containerOf(obj fyne.CanvasObject, root fyne.CanvasObject) fyne.CanvasObjec
 			}
 		}
 
-	case fyne.Widget:
+	case granio.Widget:
 		drops := DropZonesForObject(root)
 
 		for _, child := range drops {
