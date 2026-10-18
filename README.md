@@ -23,7 +23,7 @@
 Установка согласованной версии:
 
 ```sh
-go get github.com/Uzer007-admin/granio-x@{{X_VERSION}}
+go get github.com/Uzer007-admin/granio-x@22a6db2b4c9ad36d73460eb3d8e626caf68ad2df
 go test -race -tags migrated_fynedo,ci ./...
 ```
 
