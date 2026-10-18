@@ -1,0 +1,883 @@
+package refyne
+
+import (
+	"encoding/json"
+	"errors"
+	"image/color"
+	"io"
+	"log"
+	"net/url"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/canvas"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/theme"
+	"github.com/Uzer007-admin/granio/v2/widget"
+
+	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
+)
+
+type canvObj struct {
+	Type       string
+	Name       string              `json:",omitempty"`
+	Actions    map[string]string   `json:",omitempty"`
+	Struct     granio.CanvasObject `json:",omitempty"`
+	Properties map[string]string   `json:",omitempty"`
+}
+
+type cntObj struct {
+	canvObj
+	Struct map[string]interface{}
+}
+
+type form struct {
+	Type       string
+	Name       string                 `json:",omitempty"`
+	Struct     map[string]interface{} `json:",omitempty"`
+	Properties map[string]string      `json:",omitempty"`
+}
+
+type formItem struct {
+	HintText, Text string
+	Widget         *canvObj
+}
+
+type cont struct {
+	canvObj
+	Layout     string `json:",omitempty"`
+	Name       string `json:",omitempty"`
+	Objects    []interface{}
+	Properties map[string]string `json:",omitempty"`
+}
+
+// DecodeObject returns a tree of `CanvasObject` elements from the provided JSON `Reader` and
+// updates the metadata map to include any additional information.
+func DecodeObject(r io.Reader, d Context) (granio.CanvasObject, error) {
+	guidefs.InitOnce()
+
+	var data interface{}
+	err := json.NewDecoder(r).Decode(&data)
+	if err != nil || data == nil {
+		return nil, err
+	}
+
+	obj, err := DecodeMap(data.(map[string]interface{}), d)
+	return obj, err
+}
+
+// DecodeMap returns a tree of `CanvasObject` elements from the provided JSON map and
+// updates the metadata map to include any additional information.
+func DecodeMap(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
+	guidefs.InitOnce()
+
+	switch m["Type"] {
+	case "*granio.Container":
+		obj := &granio.Container{}
+		name := "WithoutLayout"
+		if n, ok := m["Layout"]; ok {
+			name = n.(string)
+		}
+
+		props := map[string]string{"layout": name}
+		d.Metadata()[obj] = props
+		if m["Properties"] != nil {
+			for k, v := range m["Properties"].(map[string]interface{}) {
+				props[k] = v.(string)
+			}
+		}
+		if name == "HBox" {
+			props["dir"] = "horizontal"
+		} else if name == "VBox" {
+			props["dir"] = "vertical"
+		}
+
+		if m["Objects"] != nil {
+			for _, data := range m["Objects"].([]interface{}) {
+				if data == nil {
+					// Nil object?
+					continue
+				}
+				child, _ := DecodeMap(data.(map[string]interface{}), d)
+				if child != nil {
+					obj.Objects = append(obj.Objects, child)
+				}
+			}
+		}
+		layoutType, ok := guidefs.Layouts[name]
+		if !ok {
+			log.Println("Undefined layout,", name)
+			layoutType = guidefs.Layouts["Stack"]
+		}
+		obj.Layout = layoutType.Create(obj, d)
+		if name, ok := m["Name"]; ok {
+			props["name"] = name.(string)
+		}
+
+		return obj, nil
+	case "*container.AppTabs":
+		return decodeAppTabs(m, d)
+	case "*container.Clip":
+		return decodeClip(m, d)
+	case "*container.Navigation":
+		return decodeNavigation(m, d)
+	case "*container.Scroll":
+		return decodeScroll(m, d)
+	case "*container.Split":
+		return decodeSplit(m, d)
+	case "*container.ThemeOverride":
+		return decodeThemeOverride(m, d)
+	}
+
+	obj := decodeWidget(m, d)
+	if obj == nil {
+		return nil, errors.New("failed to parse object from JSON")
+	}
+	obj.Refresh()
+	props := map[string]string{}
+	if unpacked, ok := m["Properties"].(map[string]interface{}); ok {
+		for k, v := range unpacked {
+			props[k] = v.(string)
+		}
+	}
+	if name, ok := m["Name"]; ok {
+		props["name"] = name.(string)
+	}
+
+	if setMin, ok := obj.(interface{ SetMinSize(granio.Size) }); ok {
+		minWithStr := props["minWidth"]
+		minHeightStr := props["minHeight"]
+		if (minWithStr != "" && minWithStr != "0") || (minHeightStr != "" && minHeightStr != "0") {
+			minWidth, _ := strconv.ParseFloat(minWithStr, 64)
+			minHeight, _ := strconv.ParseFloat(minHeightStr, 64)
+
+			setMin.SetMinSize(granio.NewSize(float32(minWidth), float32(minHeight)))
+		}
+	}
+
+	if set, ok := m["Actions"]; ok {
+		if actions, ok := set.(map[string]any); ok {
+			for k, v := range actions {
+				props[k] = v.(string)
+			}
+		}
+	}
+
+	d.Metadata()[obj] = props
+	return obj, nil
+}
+
+func decodeThemeOverride(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
+	var content granio.CanvasObject
+	info := m["Struct"].(map[string]interface{})
+	if info["Content"] != nil {
+		child, _ := DecodeMap(info["Content"].(map[string]interface{}), d)
+		content = child
+	}
+
+	data, ok := info["Theme"]
+	if !ok || data == "" {
+		data = "{}"
+	}
+	fallback := d.Theme()
+	if fallback == nil {
+		fallback = theme.DefaultTheme()
+	}
+	th, err := theme.FromJSONWithFallback(data.(string), fallback)
+	if err != nil {
+		granio.LogError("Theme decode error", err)
+	}
+	obj := container.NewThemeOverride(content, th)
+
+	props := map[string]string{
+		"data": data.(string),
+	}
+	if name, ok := m["Name"]; ok {
+		props["name"] = name.(string)
+	}
+
+	d.Metadata()[obj] = props
+	return obj, nil
+}
+
+func decodeAppTabs(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
+	obj := &container.AppTabs{}
+	info := m["Struct"].(map[string]interface{})
+
+	items := info["Items"]
+	if items != nil {
+		for _, c := range items.([]interface{}) {
+			item := &container.TabItem{}
+
+			data := c.(map[string]interface{})
+			item.Text = data["Text"].(string)
+
+			if data["Icon"] != nil {
+				res := guidefs.Icons[data["Icon"].(string)]
+				if res != nil {
+					item.Icon = res
+				}
+			}
+			item.Content, _ = DecodeMap(data["Content"].(map[string]interface{}), d)
+			obj.Append(item)
+		}
+	}
+
+	props := map[string]string{}
+	if name, ok := m["Name"]; ok {
+		props["name"] = name.(string)
+	}
+	if index, ok := info["SelectedIndex"]; ok {
+		obj.SelectIndex(int(index.(float64)))
+	}
+	if loc, ok := info["TabLocation"]; ok {
+		props["location"] = loc.(string)
+
+		switch loc {
+		case "Bottom":
+			obj.SetTabLocation(container.TabLocationBottom)
+		case "Leading":
+			obj.SetTabLocation(container.TabLocationLeading)
+		case "Trailing":
+			obj.SetTabLocation(container.TabLocationTrailing)
+		}
+	}
+
+	d.Metadata()[obj] = props
+	return obj, nil
+}
+
+func decodeClip(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
+	obj := &container.Clip{}
+	info := m["Struct"].(map[string]interface{})
+	if info["Content"] != nil {
+		child, _ := DecodeMap(info["Content"].(map[string]interface{}), d)
+		obj.Content = child
+	}
+
+	props := map[string]string{}
+	d.Metadata()[obj] = props
+	return obj, nil
+}
+
+func decodeNavigation(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
+	obj := &container.Navigation{}
+	info := m["Struct"].(map[string]interface{})
+	if info["Root"] != nil {
+		child, _ := DecodeMap(info["Root"].(map[string]interface{}), d)
+		obj.Root = child
+	}
+	if title, ok := info["Title"]; ok {
+		obj.Title = title.(string)
+	}
+
+	props := map[string]string{}
+	if name, ok := m["Name"]; ok {
+		props["name"] = name.(string)
+	}
+
+	d.Metadata()[obj] = props
+	return obj, nil
+}
+
+func decodeScroll(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
+	obj := &container.Scroll{}
+	info := m["Struct"].(map[string]interface{})
+	if off, ok := info["Direction"]; ok {
+		obj.Direction = container.ScrollDirection(off.(float64))
+	}
+	if info["Content"] != nil {
+		child, _ := DecodeMap(info["Content"].(map[string]interface{}), d)
+		obj.Content = child
+	}
+
+	props := map[string]string{}
+	if name, ok := m["Name"]; ok {
+		props["name"] = name.(string)
+	}
+
+	d.Metadata()[obj] = props
+	return obj, nil
+}
+
+func decodeSplit(m map[string]interface{}, d Context) (granio.CanvasObject, error) {
+	obj := &container.Split{}
+	info := m["Struct"].(map[string]interface{})
+	if info["Horizontal"].(bool) {
+		obj.Horizontal = true
+	}
+	if off, ok := info["Offset"]; ok {
+		obj.Offset = off.(float64)
+	}
+	if info["Leading"] != nil {
+		child, _ := DecodeMap(info["Leading"].(map[string]interface{}), d)
+		obj.Leading = child
+	}
+	if info["Trailing"] != nil {
+		child, _ := DecodeMap(info["Trailing"].(map[string]interface{}), d)
+		obj.Trailing = child
+	}
+
+	props := map[string]string{}
+	if name, ok := m["Name"]; ok {
+		props["name"] = name.(string)
+	}
+
+	d.Metadata()[obj] = props
+	return obj, nil
+}
+
+// EncodeObject writes a JSON stream for the tree of `CanvasObject` elements provided.
+// If an error occurs it will be returned, otherwise nil.
+func EncodeObject(obj granio.CanvasObject, d Context, w io.Writer) error {
+	guidefs.InitOnce()
+	tree, _ := EncodeMap(obj, d)
+
+	e := json.NewEncoder(w)
+	e.SetIndent("", "  ")
+	return e.Encode(tree)
+}
+
+// EncodeMap returns a JSON map for the tree of `CanvasObject` elements provided, using additional metadata if required.
+// If an error occurs it will be returned, otherwise nil.
+func EncodeMap(obj granio.CanvasObject, d Context) (interface{}, error) {
+	guidefs.InitOnce()
+
+	props := d.Metadata()[obj]
+	name := ""
+	actions := map[string]string{}
+	if props == nil {
+		props = make(map[string]string)
+		d.Metadata()[obj] = props
+	} else {
+		name = props["name"]
+
+		for k, v := range props {
+			if len(k) > 2 && k[0:2] == "On" {
+				actions[k] = v
+			}
+		}
+	}
+
+	switch c := obj.(type) {
+	case *canvas.Image:
+		img := c.Image
+		res := c.Resource
+		go func() { // TODO find a better way to reset this after encoding
+			time.Sleep(time.Millisecond * 100)
+			c.Image = img
+			c.Resource = res
+		}()
+
+		c.Image = nil
+		if c.Resource == nil {
+			return encodeWidget(c, name, actions, props), nil
+		}
+
+		c.Resource = guidefs.WrapResource(c.Resource)
+		wid := encodeWidget(c, name, actions, props)
+		return wid, nil
+	case *widget.Accordion:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*widget.Accordion"
+		node.Name = name
+
+		items := make([]interface{}, len(c.Items))
+		for i, child := range c.Items {
+			data := map[string]interface{}{
+				"Title": child.Title,
+			}
+			data["Detail"], _ = EncodeMap(child.Detail, d)
+
+			items[i] = data
+		}
+		node.Struct["Items"] = items
+		node.Struct["MultiOpen"] = c.MultiOpen
+
+		return &node, nil
+	case *widget.Button:
+		if c.Icon == nil {
+			return encodeWidget(c, name, actions, props), nil
+		}
+
+		ic := c.Icon
+		c.Icon = guidefs.WrapResource(c.Icon)
+		wid := encodeWidget(c, name, actions, props)
+		go func() { // TODO find a better way to reset this after encoding
+			time.Sleep(time.Millisecond * 100)
+			c.Icon = ic
+		}()
+		return wid, nil
+	case *widget.Icon:
+		if c.Resource == nil {
+			return encodeWidget(c, name, actions, props), nil
+		}
+
+		ic := c.Resource
+		c.Resource = guidefs.WrapResource(c.Resource)
+		wid := encodeWidget(c, name, actions, props)
+		go func() { // TODO find a better way to reset this after encoding
+			time.Sleep(time.Millisecond * 100)
+			c.Resource = ic
+		}()
+		return wid, nil
+	case *widget.Toolbar:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*widget.Toolbar"
+		node.Name = name
+
+		items := make([]interface{}, len(c.Items))
+		for i, child := range c.Items {
+			data := map[string]interface{}{}
+			switch t := child.(type) {
+			case *widget.ToolbarAction:
+				data["Icon"] = guidefs.WrapResource(t.Icon)
+				data["Type"] = "Action"
+			case *widget.ToolbarSeparator:
+				data["Type"] = "Separator"
+			case *widget.ToolbarSpacer:
+				data["Type"] = "Spacer"
+			}
+
+			items[i] = data
+		}
+		node.Struct["Items"] = items
+
+		return &node, nil
+	case *container.AppTabs:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*container.AppTabs"
+		node.Name = name
+
+		items := make([]interface{}, len(c.Items))
+		for i, child := range c.Items {
+			data := map[string]interface{}{
+				"Text": child.Text,
+			}
+			if child.Icon != nil {
+				data["Icon"] = guidefs.WrapResource(child.Icon)
+			}
+			data["Content"], _ = EncodeMap(child.Content, d)
+
+			items[i] = data
+		}
+		node.Struct["Items"] = items
+		node.Struct["SelectedIndex"] = c.SelectedIndex()
+		node.Struct["TabLocation"] = props["location"]
+
+		return &node, nil
+	case *container.Clip:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*container.Clip"
+		node.Name = name
+
+		node.Struct["Content"], _ = EncodeMap(c.Content, d)
+
+		return &node, nil
+	case *container.Navigation:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*container.Navigation"
+		node.Struct["Title"] = c.Title
+		node.Name = name
+
+		node.Struct["Root"], _ = EncodeMap(c.Root, d)
+
+		return &node, nil
+	case *container.Scroll:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*container.Scroll"
+		node.Struct["Direction"] = c.Direction
+		node.Name = name
+
+		node.Struct["Content"], _ = EncodeMap(c.Content, d)
+
+		return &node, nil
+	case *container.ThemeOverride:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*container.ThemeOverride"
+		node.Name = name
+
+		node.Struct["Content"], _ = EncodeMap(c.Content, d)
+		node.Struct["Theme"] = d.Metadata()[c]["data"]
+
+		return &node, nil
+	case *container.Split:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*container.Split"
+		node.Struct["Horizontal"] = c.Horizontal
+		node.Struct["Offset"] = c.Offset
+		node.Name = name
+
+		node.Struct["Leading"], _ = EncodeMap(c.Leading, d)
+		node.Struct["Trailing"], _ = EncodeMap(c.Trailing, d)
+
+		return &node, nil
+	case *widget.Card:
+		node := &cntObj{Struct: make(map[string]interface{})}
+		node.Type = "*widget.Card"
+		node.Name = name
+		node.Struct["Title"] = c.Title
+		node.Struct["Subtitle"] = c.Subtitle
+		if c.Image != nil {
+			node.Struct["Image"], _ = EncodeMap(c.Image, d)
+		}
+		if c.Content != nil {
+			node.Struct["Content"], _ = EncodeMap(c.Content, d)
+		}
+
+		return &node, nil
+	case granio.Widget:
+		if form, ok := c.(*widget.Form); ok {
+			return encodeForm(form, name, props), nil
+		}
+		return encodeWidget(c, name, actions, props), nil
+	case *granio.Container:
+		var node cont
+		node.Type = "*granio.Container"
+		if c.Layout != nil {
+			node.Layout = strings.Split(reflect.TypeOf(c.Layout).String(), ".")[1]
+			node.Layout = strings.ToTitle(node.Layout[0:1]) + node.Layout[1:]
+		}
+		node.Name = name
+		p := strings.Index(node.Layout, "Layout")
+		if p > 0 && node.Layout != "WithoutLayout" {
+			node.Layout = node.Layout[:p]
+		}
+		if node.Layout == "Box" {
+			if props["dir"] == "horizontal" {
+				node.Layout = "HBox"
+			} else {
+				node.Layout = "VBox"
+			}
+		}
+		for _, o := range c.Objects {
+			enc, _ := EncodeMap(o, d)
+			node.Objects = append(node.Objects, enc)
+		}
+		node.Properties = d.Metadata()[c]
+		return &node, nil
+	}
+
+	ret := &canvObj{Type: reflect.TypeOf(obj).String(), Name: name, Struct: obj}
+	encodeProperties(props, ret)
+	return ret, nil
+}
+
+func encodeForm(obj *widget.Form, name string, meta map[string]string) interface{} {
+	var items []*formItem
+	for _, o := range obj.Items {
+		items = append(items,
+			&formItem{
+				HintText: o.HintText,
+				Text:     o.Text,
+				Widget:   encodeWidget(o.Widget, "", nil, nil),
+			})
+	}
+
+	var node form
+	node.Type = "*widget.Form"
+	node.Name = name
+	node.Struct = map[string]interface{}{
+		"Hidden":     obj.Hidden,
+		"Items":      items,
+		"SubmitText": obj.SubmitText,
+		"CancelText": obj.CancelText,
+	}
+	node.Properties = meta
+
+	return &node
+}
+
+func encodeProperties(meta map[string]string, w *canvObj) {
+	if len(meta) > 0 {
+		w.Properties = make(map[string]string)
+		for k, v := range meta {
+			if k == "name" {
+				continue // it's a separate field set above
+			}
+
+			w.Properties[k] = v
+		}
+	}
+}
+
+func encodeWidget(obj granio.CanvasObject, name string, actions map[string]string, meta map[string]string) *canvObj {
+	w := &canvObj{Type: guidefs.TypeName(obj), Name: name, Struct: obj}
+
+	if len(actions) > 0 {
+		w.Actions = actions
+	}
+	encodeProperties(meta, w)
+	return w
+}
+
+func decodeAccordionItem(m map[string]interface{}, d Context) *widget.AccordionItem {
+	f := &widget.AccordionItem{}
+	if str, ok := m["Title"]; ok {
+		f.Title = str.(string)
+	}
+	if on, ok := m["Open"]; ok {
+		f.Open = on.(bool)
+	}
+	if wid, ok := m["Detail"]; ok {
+		f.Detail = decodeWidget(wid.(map[string]interface{}), d)
+	}
+	return f
+}
+
+func decodeFormItem(m map[string]interface{}, d Context) *widget.FormItem {
+	f := &widget.FormItem{}
+	if str, ok := m["HintText"]; ok {
+		f.HintText = str.(string)
+	}
+	if str, ok := m["Text"]; ok {
+		f.Text = str.(string)
+	}
+	if wid, ok := m["Widget"]; ok {
+		f.Widget = decodeWidget(wid.(map[string]interface{}), d)
+	}
+	return f
+}
+
+func decodeFromMap(m map[string]interface{}, in interface{}) {
+	t := reflect.ValueOf(in).Elem()
+	for k, v := range m {
+		val := t.FieldByName(k)
+		if !val.IsValid() {
+			continue
+		}
+
+		switch val.Type().Kind() {
+		case reflect.Ptr:
+			continue
+		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			val.SetUint(uint64(reflect.ValueOf(v).Float()))
+		default:
+			val.Set(reflect.ValueOf(v))
+		}
+	}
+}
+
+func decodeTextStyle(m map[string]interface{}) (s granio.TextStyle) {
+	if m["Bold"] == true {
+		s.Bold = true
+	}
+	if m["Italic"] == true {
+		s.Italic = true
+	}
+	if m["Monospace"] == true {
+		s.Monospace = true
+	}
+
+	if m["TabWidth"] != nil && m["TabWidth"] != 0 {
+		s.TabWidth = int(m["TabWidth"].(float64))
+	}
+	return
+}
+
+func decodePosition(m map[string]interface{}) granio.Position {
+	x := m["X"].(float64)
+	y := m["Y"].(float64)
+
+	return granio.NewPos(float32(x), float32(y))
+}
+
+func decodeToolbarItem(m map[string]interface{}) widget.ToolbarItem {
+	if v, ok := m["Type"]; ok {
+		switch v {
+		case "Separator":
+			return widget.NewToolbarSeparator()
+		case "Spacer":
+			return widget.NewToolbarSpacer()
+		}
+	}
+
+	return widget.NewToolbarAction(guidefs.Icons[m["Icon"].(string)], nil)
+}
+
+func decodeRichTextStyle(m map[string]interface{}) (s widget.RichTextStyle) {
+	for k, v := range m {
+		switch k {
+		case "TextStyle":
+			s.TextStyle = decodeTextStyle(v.(map[string]interface{}))
+		case "Inline":
+			s.Inline = v.(bool)
+			// TODO more!
+		}
+	}
+
+	return
+}
+
+func decodeFields(e reflect.Value, in map[string]interface{}, d Context) error {
+	for k, v := range in {
+		f := e.FieldByName(k)
+
+		if !f.IsValid() {
+			granio.LogError("Field "+k+" is not valid", nil)
+			continue
+		}
+
+		typeName := f.Type().String()
+		switch typeName {
+		case "granio.TextAlign", "granio.TextTruncation", "granio.TextWrap", "widget.ButtonAlign", "widget.ButtonImportance",
+			"widget.ButtonIconPlacement", "widget.Importance", "widget.Orientation", "widget.ScrollDirection", "granio.ScrollDirection",
+			"canvas.ImageFill", "canvas.ImageScale":
+			f.SetInt(int64(reflect.ValueOf(v).Float()))
+		case "granio.TextStyle":
+			f.Set(reflect.ValueOf(decodeTextStyle(reflect.ValueOf(v).Interface().(map[string]interface{}))))
+		case "widget.RichTextStyle":
+			f.Set(reflect.ValueOf(decodeRichTextStyle(reflect.ValueOf(v).Interface().(map[string]interface{}))))
+		case "granio.Position":
+			f.Set(reflect.ValueOf(decodePosition(reflect.ValueOf(v).Interface().(map[string]interface{}))))
+		case "granio.Resource":
+			res := guidefs.Icons[reflect.ValueOf(v).String()]
+			if res != nil {
+				f.Set(reflect.ValueOf(res))
+			}
+		case "granio.ThemeSizeName":
+			if v != nil {
+				f.Set(reflect.ValueOf(granio.ThemeSizeName(v.(string))))
+			}
+		case "[]*widget.AccordionItem":
+			var items []*widget.AccordionItem
+			for _, item := range reflect.ValueOf(v).Interface().([]interface{}) {
+				items = append(items, decodeAccordionItem(item.(map[string]interface{}), d))
+			}
+			f.Set(reflect.ValueOf(items))
+		case "[]*widget.FormItem":
+			var items []*widget.FormItem
+			for _, item := range reflect.ValueOf(v).Interface().([]interface{}) {
+				items = append(items, decodeFormItem(item.(map[string]interface{}), d))
+			}
+			f.Set(reflect.ValueOf(items))
+		case "[]widget.ToolbarItem":
+			var items []widget.ToolbarItem
+			for _, item := range reflect.ValueOf(v).Interface().([]interface{}) {
+				items = append(items, decodeToolbarItem(item.(map[string]interface{})))
+			}
+			f.Set(reflect.ValueOf(items))
+		case "[]widget.RichTextSegment":
+			var items []widget.RichTextSegment
+			for _, item := range reflect.ValueOf(v).Interface().([]interface{}) {
+				obj := &widget.TextSegment{}
+				_ = decodeFields(reflect.ValueOf(obj).Elem(), item.(map[string]interface{}), d)
+				items = append(items, obj)
+			}
+			f.Set(reflect.ValueOf(items))
+		case "granio.CanvasObject", "*canvas.Image":
+			if v == nil {
+				continue
+			}
+			child, err := DecodeMap(v.(map[string]interface{}), d)
+			if err != nil {
+				return err
+			}
+			if child != nil {
+				cv := reflect.ValueOf(child)
+				if cv.Type().AssignableTo(f.Type()) {
+					f.Set(cv)
+				}
+			}
+		case "*url.URL":
+			u := &url.URL{}
+			decodeFromMap(reflect.ValueOf(v).Interface().(map[string]interface{}), u)
+			f.Set(reflect.ValueOf(u))
+		case "[]string":
+			if v != nil {
+				anySlice := reflect.ValueOf(v).Interface().([]interface{})
+				strings := make([]string, len(anySlice))
+				for i, a := range anySlice {
+					strings[i] = a.(string)
+				}
+				f.Set(reflect.ValueOf(strings))
+			}
+		case "time.Time", "*time.Time":
+			s := reflect.ValueOf(v).String()
+
+			t, err := time.Parse(time.RFC3339, s)
+			switch {
+			case err != nil:
+				granio.LogError("Failed parse time "+s, err)
+			case typeName == "*time.Time":
+				f.Set(reflect.ValueOf(&t))
+			default:
+				f.Set(reflect.ValueOf(t))
+			}
+		case "color.Color":
+			var c color.Color
+			val := reflect.ValueOf(v)
+			if v == nil {
+				continue
+			}
+
+			data := val.Interface().(map[string]interface{})
+			if _, isGray := data["Y"]; isGray {
+				c = &color.Gray16{}
+			} else {
+				c = &color.NRGBA{}
+			}
+			decodeFromMap(val.Interface().(map[string]interface{}), c)
+			f.Set(reflect.ValueOf(c))
+		default:
+			if strings.Index(typeName, "int") == 0 {
+				f.SetInt(int64(reflect.ValueOf(v).Float()))
+			} else if strings.Index(typeName, "uint") == 0 {
+				f.SetUint(uint64(reflect.ValueOf(v).Float()))
+			} else if typeName == "float32" {
+				f.SetFloat(reflect.ValueOf(v).Float())
+			} else if v != nil {
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Println("Panicked decoding", k, "of", e.Type().String(), ":", r)
+						}
+					}()
+					f.Set(reflect.ValueOf(v))
+				}()
+			}
+		}
+	}
+
+	return nil
+}
+
+func decodeWidget(m map[string]interface{}, d Context) granio.CanvasObject {
+	class, ok := m["Type"].(string)
+	if !ok {
+		log.Println("Failed to detect type of object", m)
+		return nil
+	}
+	def := guidefs.Lookup(class)
+	if def == nil {
+		log.Println("Failed to find object definition for", class)
+		return nil
+	}
+	obj := def.Create(d)
+	e := reflect.ValueOf(obj).Elem()
+
+	data, ok := m["Struct"]
+	if !ok {
+		granio.LogError("Struct was not found in JSON data", nil)
+		return obj
+	}
+
+	err := decodeFields(e, data.(map[string]interface{}), d)
+	if err != nil {
+		granio.LogError("Failed to handle type "+class, err)
+	}
+
+	if form, ok := obj.(*widget.Form); ok {
+		if props, ok := m["Properties"].(map[string]any); ok {
+			if hide, ok := props["hideButtons"]; ok && hide == "true" {
+				form.OnCancel = nil
+				form.OnSubmit = nil
+			}
+		}
+	}
+
+	return obj
+}

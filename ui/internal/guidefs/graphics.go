@@ -1,0 +1,670 @@
+package guidefs
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"image/color"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strconv"
+	"strings"
+
+	"github.com/Uzer007-admin/granio/v2"
+	"github.com/Uzer007-admin/granio/v2/canvas"
+	"github.com/Uzer007-admin/granio/v2/container"
+	"github.com/Uzer007-admin/granio/v2/data/binding"
+	"github.com/Uzer007-admin/granio/v2/dialog"
+	"github.com/Uzer007-admin/granio/v2/widget"
+)
+
+var (
+	// GraphicsNames is an array with the list of names of all the graphical primitives
+	GraphicsNames []string
+
+	// Graphics provides the info about the type of canvas object primitives
+	Graphics map[string]WidgetInfo
+)
+
+func initGraphics() {
+	Graphics = map[string]WidgetInfo{
+		"*canvas.Arc": {
+			Name: "Arc",
+			Create: func(Context) granio.CanvasObject {
+				rect := canvas.NewArc(0, 90, 0.5, color.Black)
+				rect.StrokeColor = color.Black
+				return rect
+			},
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+				a := obj.(*canvas.Arc)
+				return []*widget.FormItem{
+					widget.NewFormItem("Start Angle", newIntSliderButton(float64(a.StartAngle), -360, 360, func(f float64) {
+						a.StartAngle = float32(f)
+						a.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("End Angle", newIntSliderButton(float64(a.EndAngle), -360, 360, func(f float64) {
+						a.EndAngle = float32(f)
+						a.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Fill", newColorButton(a.FillColor, func(c color.Color) {
+						a.FillColor = c
+						a.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Corner", newIntSliderButton(float64(a.CornerRadius), 0, 32, func(f float64) {
+						a.CornerRadius = float32(f)
+						a.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Cutout Ratio", newRatioSliderButton(float64(a.CutoutRatio), 0, 1, func(f float64) {
+						a.CutoutRatio = float32(f)
+						a.Refresh()
+						onchanged()
+					})),
+
+					widget.NewFormItem("Stroke", newIntSliderButton(float64(a.StrokeWidth), 0, 32, func(f float64) {
+						a.StrokeWidth = float32(f)
+						a.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Color", newColorButton(a.StrokeColor, func(c color.Color) {
+						a.StrokeColor = c
+						a.Refresh()
+						onchanged()
+					})),
+				}
+			},
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
+				return []string{"canvas", "image/color"}
+			},
+		},
+		"*canvas.Circle": {
+			Name: "Circle",
+			Create: func(Context) granio.CanvasObject {
+				rect := canvas.NewCircle(color.Black)
+				rect.StrokeColor = color.Black
+				return rect
+			},
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+				r := obj.(*canvas.Circle)
+				return []*widget.FormItem{
+					widget.NewFormItem("Fill", newColorButton(r.FillColor, func(c color.Color) {
+						r.FillColor = c
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Stroke", newIntSliderButton(float64(r.StrokeWidth), 0, 32, func(f float64) {
+						r.StrokeWidth = float32(f)
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Color", newColorButton(r.StrokeColor, func(c color.Color) {
+						r.StrokeColor = c
+						r.Refresh()
+						onchanged()
+					})),
+				}
+			},
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
+				return []string{"canvas", "image/color"}
+			},
+		},
+		"*canvas.Image": initImageGraphic(),
+		"*canvas.LinearGradient": {
+			Name: "LinearGradient",
+			Create: func(Context) granio.CanvasObject {
+				return &canvas.LinearGradient{StartColor: color.White}
+			},
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+				r := obj.(*canvas.LinearGradient)
+				angleSlide := widget.NewSlider(0, 360)
+				angleSlide.Step = 90
+				angleSlide.OnChanged = func(f float64) {
+					r.Angle = f
+					r.Refresh()
+					onchanged()
+				}
+				return []*widget.FormItem{
+					widget.NewFormItem("Start", newColorButton(r.StartColor, func(c color.Color) {
+						r.StartColor = c
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("End", newColorButton(r.EndColor, func(c color.Color) {
+						r.EndColor = c
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Angle", angleSlide),
+				}
+			},
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
+				return []string{"canvas", "image/color"}
+			},
+		},
+		"*canvas.Polygon": {
+			Name: "Polygon",
+			Create: func(Context) granio.CanvasObject {
+				rect := canvas.NewPolygon(5, color.Black)
+				rect.StrokeColor = color.Black
+				return rect
+			},
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+				p := obj.(*canvas.Polygon)
+				return []*widget.FormItem{
+					widget.NewFormItem("Sides", newIntSliderButton(float64(p.Sides), 3, 18, func(f float64) {
+						p.Sides = uint(f)
+						p.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Fill", newColorButton(p.FillColor, func(c color.Color) {
+						p.FillColor = c
+						p.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Corner", newIntSliderButton(float64(p.CornerRadius), 0, 32, func(f float64) {
+						p.CornerRadius = float32(f)
+						p.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Angle", newIntSliderButton(float64(p.Angle), -360, 360, func(f float64) {
+						p.Angle = float32(f)
+						p.Refresh()
+						onchanged()
+					})),
+
+					widget.NewFormItem("Stroke", newIntSliderButton(float64(p.StrokeWidth), 0, 32, func(f float64) {
+						p.StrokeWidth = float32(f)
+						p.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Color", newColorButton(p.StrokeColor, func(c color.Color) {
+						p.StrokeColor = c
+						p.Refresh()
+						onchanged()
+					})),
+				}
+			},
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
+				return []string{"canvas", "image/color"}
+			},
+		},
+		"*canvas.RadialGradient": {
+			Name: "RadialGradient",
+			Create: func(Context) granio.CanvasObject {
+				return &canvas.RadialGradient{StartColor: color.White}
+			},
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+				r := obj.(*canvas.RadialGradient)
+				return []*widget.FormItem{
+					widget.NewFormItem("Start", newColorButton(r.StartColor, func(c color.Color) {
+						r.StartColor = c
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("End", newColorButton(r.EndColor, func(c color.Color) {
+						r.EndColor = c
+						r.Refresh()
+						onchanged()
+					})),
+				}
+			},
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
+				return []string{"canvas", "image/color"}
+			},
+		},
+		"*canvas.Rectangle": {
+			Name: "Rectangle",
+			Create: func(Context) granio.CanvasObject {
+				rect := canvas.NewRectangle(color.Black)
+				rect.StrokeColor = color.Black
+				return rect
+			},
+			Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+				r := obj.(*canvas.Rectangle)
+				props := c.Metadata()[obj]
+
+				minWidthInput := widget.NewEntry()
+				minWidthInput.SetText(props["minWidth"])
+				minHeightInput := widget.NewEntry()
+				minHeightInput.SetText(props["minHeight"])
+
+				minWidthInput.Validator = func(s string) error {
+					if s == "" {
+						return nil
+					}
+
+					f, err := strconv.ParseFloat(s, 32)
+					if err != nil {
+						return errors.New("invalid number format")
+					}
+					if f < 0 {
+						return errors.New("negative minimum size")
+					}
+					return nil
+				}
+				minHeightInput.Validator = minWidthInput.Validator
+
+				updateMin := func(_ string) {
+					w, err := strconv.ParseFloat(minWidthInput.Text, 32)
+					if err != nil {
+						props["minWidth"] = ""
+					} else {
+						props["minWidth"] = minWidthInput.Text
+					}
+
+					h, err := strconv.ParseFloat(minHeightInput.Text, 32)
+					if err != nil {
+						props["minHeight"] = ""
+					} else {
+						props["minHeight"] = minHeightInput.Text
+					}
+
+					r.SetMinSize(granio.NewSize(float32(w), float32(h)))
+					onchanged()
+				}
+				minWidthInput.OnChanged = updateMin
+				minHeightInput.OnChanged = updateMin
+
+				aspectData := binding.NewFloat()
+				_ = aspectData.Set(float64(r.Aspect))
+				aspectData.AddListener(binding.NewDataListener(func() {
+					a, _ := aspectData.Get()
+					r.Aspect = float32(a)
+					r.Refresh()
+				}))
+				aspect := widget.NewEntryWithData(binding.FloatToString(aspectData))
+
+				return []*widget.FormItem{
+					widget.NewFormItem("Fill", newColorButton(r.FillColor, func(c color.Color) {
+						r.FillColor = c
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Corner", newIntSliderButton(float64(r.CornerRadius), 0, 32, func(f float64) {
+						r.CornerRadius = float32(f)
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Stroke", newIntSliderButton(float64(r.StrokeWidth), 0, 32, func(f float64) {
+						r.StrokeWidth = float32(f)
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Color", newColorButton(r.StrokeColor, func(c color.Color) {
+						r.StrokeColor = c
+						r.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Aspect", aspect),
+					widget.NewFormItem("Min Width", minWidthInput),
+					widget.NewFormItem("Min Height", minHeightInput),
+				}
+			},
+			Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
+				props := c.Metadata()[obj]
+				minWidth := props["minWidth"]
+				minHeight := props["minHeight"]
+				hasMin := (minWidth != "" && minWidth != "0") || (minHeight != "" && minHeight != "0")
+
+				buf := bytes.Buffer{}
+				fallbackPrint(reflect.ValueOf(obj), &buf)
+				code := buf.String()
+
+				if hasMin {
+					code = fmt.Sprintf("func() *canvas.Rectangle {"+
+						"rect := %s; rect.SetMinSize(%#v); return rect}()", code, obj.MinSize())
+				}
+				return widgetRef(obj, c, defs, code)
+			},
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
+				return []string{"canvas", "image/color"}
+			},
+		},
+		"*canvas.Text": {
+			Name: "Text",
+			Create: func(Context) granio.CanvasObject {
+				rect := canvas.NewText("Text", color.Black)
+				return rect
+			},
+			Edit: func(obj granio.CanvasObject, _ Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+				t := obj.(*canvas.Text)
+				e := widget.NewEntry()
+				e.SetText(t.Text)
+				e.OnChanged = func(text string) {
+					t.Text = text
+					t.Refresh()
+					onchanged()
+				}
+
+				bold := widget.NewCheck("", func(on bool) {
+					t.TextStyle.Bold = on
+					t.Refresh()
+					onchanged()
+				})
+				bold.Checked = t.TextStyle.Bold
+				italic := widget.NewCheck("", func(on bool) {
+					t.TextStyle.Italic = on
+					t.Refresh()
+					onchanged()
+				})
+				italic.Checked = t.TextStyle.Italic
+				mono := widget.NewCheck("", func(on bool) {
+					t.TextStyle.Monospace = on
+					t.Refresh()
+					onchanged()
+				})
+				mono.Checked = t.TextStyle.Monospace
+
+				return []*widget.FormItem{
+					widget.NewFormItem("Text", e),
+					widget.NewFormItem("Color", newColorButton(t.Color, func(c color.Color) {
+						t.Color = c
+						t.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("TextSize", newIntSliderButton(float64(t.TextSize), 4, 64, func(f float64) {
+						t.TextSize = float32(f)
+						t.Refresh()
+						onchanged()
+					})),
+					widget.NewFormItem("Bold", bold),
+					widget.NewFormItem("Italic", italic),
+					widget.NewFormItem("Monospace", mono),
+				}
+			},
+			Packages: func(_ granio.CanvasObject, _ Context) []string {
+				return []string{"canvas", "image/color"}
+			},
+		},
+	}
+
+	GraphicsNames = extractNames(Graphics)
+}
+
+func initImageGraphic() WidgetInfo {
+	return WidgetInfo{
+		Name: "Image",
+		Create: func(Context) granio.CanvasObject {
+			return &canvas.Image{}
+		},
+		Edit: func(obj granio.CanvasObject, c Context, _ func([]*widget.FormItem), onchanged func()) []*widget.FormItem {
+			i := obj.(*canvas.Image)
+			props := c.Metadata()[obj]
+
+			minWidthInput := widget.NewEntry()
+			minWidthInput.SetText(props["minWidth"])
+			minHeightInput := widget.NewEntry()
+			minHeightInput.SetText(props["minHeight"])
+
+			minWidthInput.Validator = func(s string) error {
+				if s == "" {
+					return nil
+				}
+
+				f, err := strconv.ParseFloat(s, 32)
+				if err != nil {
+					return errors.New("invalid number format")
+				}
+				if f < 0 {
+					return errors.New("negative minimum size")
+				}
+				return nil
+			}
+			minHeightInput.Validator = minWidthInput.Validator
+
+			updateMin := func(_ string) {
+				w, err := strconv.ParseFloat(minWidthInput.Text, 32)
+				if err != nil {
+					props["minWidth"] = ""
+				} else {
+					props["minWidth"] = minWidthInput.Text
+				}
+
+				h, err := strconv.ParseFloat(minHeightInput.Text, 32)
+				if err != nil {
+					props["minHeight"] = ""
+				} else {
+					props["minHeight"] = minHeightInput.Text
+				}
+
+				i.SetMinSize(granio.NewSize(float32(w), float32(h)))
+				onchanged()
+			}
+			minWidthInput.OnChanged = updateMin
+			minHeightInput.OnChanged = updateMin
+
+			fill := widget.NewSelect([]string{"Stretch", "Contain", "Cover"}, func(s string) {
+				mode := canvas.ImageFillStretch
+				switch s {
+				case "Contain":
+					mode = canvas.ImageFillContain
+				case "Cover":
+					mode = canvas.ImageFillCover
+				}
+				i.FillMode = mode
+				i.Refresh()
+				onchanged()
+			})
+			fill.SetSelectedIndex(int(i.FillMode))
+
+			cornerRadius := newIntSliderButton(float64(i.CornerRadius), 0, 32, func(f float64) {
+				i.CornerRadius = float32(f)
+				i.Refresh()
+				onchanged()
+			})
+
+			// TODO move to go:embed for files!
+			pathSelect := widget.NewButton("(No file)", nil)
+			if i.File != "" {
+				pathSelect.SetText(filepath.Base(i.File))
+			}
+			pathSelect.OnTapped = func() {
+				dialog.ShowFileOpen(func(r granio.URIReadCloser, err error) {
+					path := ""
+					if r != nil && err == nil {
+						_ = r.Close()
+						path = r.URI().Path()
+					}
+
+					pwd, _ := os.Getwd()
+					if strings.Index(path, pwd) == 0 {
+						path = path[len(pwd)+1:]
+					}
+					i.File = path
+					if path == "" {
+						i.Image = nil
+						pathSelect.SetText("(No file)")
+					} else {
+						pathSelect.SetText(r.URI().Name())
+					}
+					i.Refresh()
+					onchanged()
+				}, granio.CurrentApp().Driver().AllWindows()[0])
+			}
+
+			resSelect := newIconSelectorButton(i.Resource, func(res granio.Resource) {
+				i.Resource = res
+				i.Refresh()
+				onchanged()
+			}, true)
+			resSelect.SetIcon(i.Resource)
+
+			return []*widget.FormItem{
+				widget.NewFormItem("Fill mode", fill),
+				widget.NewFormItem("Corner", cornerRadius),
+				widget.NewFormItem("Path", pathSelect),
+				widget.NewFormItem("Resource", resSelect),
+				widget.NewFormItem("Min Width", minWidthInput),
+				widget.NewFormItem("Min Height", minHeightInput),
+			}
+		},
+		Packages: func(obj granio.CanvasObject, _ Context) []string {
+			i := obj.(*canvas.Image)
+			if i.Resource != nil {
+				return []string{"canvas", "theme"}
+			}
+			return []string{"canvas"}
+		},
+		Gostring: func(obj granio.CanvasObject, c Context, defs map[string]string) string {
+			i := obj.(*canvas.Image)
+			props := c.Metadata()[obj]
+			minWidth := props["minWidth"]
+			minHeight := props["minHeight"]
+			hasMin := (minWidth != "" && minWidth != "0") || (minHeight != "" && minHeight != "0")
+
+			code := ""
+			if i.Resource != nil {
+				res := "theme." + IconName(i.Resource) + "()"
+
+				if !hasMin && i.FillMode == canvas.ImageFillStretch && i.CornerRadius == 0 {
+					code = fmt.Sprintf("canvas.NewImageFromResource(%s)", res)
+				} else {
+					code = fmt.Sprintf("&canvas.Image{Resource: %s, FillMode: %s, CornerRadius: %f}", res, fillName(i.FillMode), i.CornerRadius)
+
+					if hasMin {
+						code = fmt.Sprintf("func() *canvas.Image {"+
+							"img := %s; img.SetMinSize(%#v); return img}()", code, i.MinSize())
+					}
+				}
+			} else {
+				if !hasMin && i.FillMode == canvas.ImageFillStretch && i.CornerRadius == 0 {
+					code = fmt.Sprintf("canvas.NewImageFromFile(\"%s\")", i.File)
+				} else {
+					code = fmt.Sprintf("&canvas.Image{File: \"%s\", FillMode: %s, CornerRadius: %f}", i.File, fillName(i.FillMode), i.CornerRadius)
+
+					if hasMin {
+						code = fmt.Sprintf("func() *canvas.Image {"+
+							"img := %s; img.SetMinSize(%#v); return img}()", code, i.MinSize())
+					}
+				}
+			}
+
+			return widgetRef(obj, c, defs, code)
+		},
+	}
+}
+
+func newColorButton(c color.Color, fn func(color.Color)) granio.CanvasObject {
+	// TODO get the window passed in somehow
+	w := granio.CurrentApp().Driver().AllWindows()[0]
+
+	input := widget.NewEntry()
+	input.SetText(formatColor(c))
+	preview := newColorTapper(c, func(col color.Color) {
+		raw := formatColor(col)
+		input.SetText(raw)
+		fn(col)
+	}, w)
+
+	input.OnChanged = func(raw string) {
+		c := parseColor(raw)
+		preview.setColor(c)
+		fn(c)
+	}
+	return container.NewBorder(nil, nil, preview, nil, input)
+}
+
+type colorTapper struct {
+	widget.BaseWidget
+
+	r   *canvas.Rectangle
+	fn  func(color.Color)
+	win granio.Window
+}
+
+func newColorTapper(c color.Color, fn func(color.Color), win granio.Window) *colorTapper {
+	preview := canvas.NewRectangle(c)
+	preview.SetMinSize(granio.NewSquareSize(32))
+
+	t := &colorTapper{r: preview, fn: fn, win: win}
+	t.ExtendBaseWidget(t)
+	return t
+}
+
+func (c *colorTapper) CreateRenderer() granio.WidgetRenderer {
+	return widget.NewSimpleRenderer(c.r)
+}
+
+func (c *colorTapper) Tapped(_ *granio.PointEvent) {
+	d := dialog.NewColorPicker("Choose Color", "Pick a color", c.fn, c.win)
+	d.Advanced = true
+	d.SetColor(c.r.FillColor)
+	d.Show()
+}
+
+func (c *colorTapper) setColor(col color.Color) {
+	c.r.FillColor = col
+	c.r.Refresh()
+}
+
+func newIntSliderButton(f float64, start, end float64, fn func(float64)) granio.CanvasObject {
+	return newSliderButtonWithConversion(f, start, end, 1, "%0.0f", fn)
+}
+
+func newRatioSliderButton(f float64, start, end float64, fn func(float64)) granio.CanvasObject {
+	return newSliderButtonWithConversion(f, start, end, 0.01, "%0.2f", fn)
+}
+
+func newSliderButtonWithConversion(f float64, start, end, step float64, format string, fn func(float64)) granio.CanvasObject {
+	input := widget.NewEntry()
+	input.SetText(strconv.Itoa(int(f)))
+	slide := widget.NewSlider(start, end)
+	slide.SetValue(f)
+	slide.Step = step
+
+	input.OnChanged = func(s string) {
+		f, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return
+		}
+
+		slide.SetValue(f)
+		fn(f)
+	}
+	slide.OnChanged = func(f float64) {
+		input.SetText(fmt.Sprintf(format, f)) // format like an int
+		fn(f)
+	}
+	return container.NewBorder(nil, nil, input, nil, slide)
+}
+
+func parseColor(s string) color.Color {
+	if s == "" {
+		return color.Black
+	}
+
+	var rgb int
+	_, err := fmt.Sscanf(s, "#%x", &rgb)
+	if err != nil {
+		return color.Transparent
+	}
+
+	hasAlpha := len(s) > 7
+	a := 0xff
+	offset := 0
+	if hasAlpha {
+		a = rgb & 0xff
+		offset = 8
+	}
+
+	b := rgb >> offset & 0xff
+	gg := rgb >> (offset + 8) & 0xff
+	r := rgb >> (offset + 16) & 0xff
+	return color.NRGBA{R: uint8(r), G: uint8(gg), B: uint8(b), A: uint8(a)}
+}
+
+func formatColor(c color.Color) string {
+	if c == nil {
+		return "#000000"
+	}
+	ch := color.RGBAModel.Convert(c).(color.RGBA)
+	if ch.A == 0xff {
+		return fmt.Sprintf("#%.2x%.2x%.2x", ch.R, ch.G, ch.B)
+	}
+
+	return fmt.Sprintf("#%.2x%.2x%.2x%.2x", ch.R, ch.G, ch.B, ch.A)
+}
