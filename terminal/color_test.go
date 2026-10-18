@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	widget2 "github.com/Uzer007-admin/granio-terminal/internal/widget"
+	widget2 "github.com/Uzer007-admin/granio-x/terminal/internal/widget"
 	"github.com/Uzer007-admin/granio/v2"
 	"github.com/Uzer007-admin/granio/v2/widget"
 	"github.com/stretchr/testify/assert"

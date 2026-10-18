@@ -15,6 +15,8 @@ import (
 )
 
 func (t *Terminal) updatePTYSize() {
+	t.closeLock.Lock()
+	defer t.closeLock.Unlock()
 	if t.pty == nil { // SSH or other direct connection?
 		return
 	}

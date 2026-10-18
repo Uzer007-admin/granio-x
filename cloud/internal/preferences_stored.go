@@ -15,6 +15,11 @@ type preferences struct {
 	*InMemoryPreferences
 
 	prefLock            sync.RWMutex
+	ioLock              sync.Mutex
+	saveWorkers         sync.WaitGroup
+	saveTimer           *time.Timer
+	stopWatching        func()
+	watchDone           <-chan struct{}
 	disconnected        bool
 	loadingInProgress   bool
 	savedRecently       bool
@@ -31,7 +36,17 @@ var _ granio.Preferences = (*preferences)(nil)
 func (p *preferences) Disconnect() {
 	p.prefLock.Lock()
 	p.disconnected = true
+	if p.saveTimer != nil && p.saveTimer.Stop() {
+		p.saveWorkers.Done()
+	}
+	p.saveTimer = nil
+	stop := p.stopWatching
+	p.stopWatching = nil
 	p.prefLock.Unlock()
+	if stop != nil {
+		stop()
+	}
+	p.saveWorkers.Wait()
 }
 
 // forceImmediateSave writes preferences to file immediately, ignoring the debouncing
@@ -47,9 +62,24 @@ func (p *preferences) forceImmediateSave() {
 }
 
 func (p *preferences) resetSavedRecently() {
-	go func() {
-		time.Sleep(time.Millisecond * 100) // writes are not always atomic. 10ms worked, 100 is safer.
+	p.prefLock.Lock()
+	defer p.prefLock.Unlock()
+	if p.disconnected {
+		return
+	}
+	if p.saveTimer != nil && p.saveTimer.Stop() {
+		p.saveWorkers.Done()
+	}
+	p.saveWorkers.Add(1)
+	var timer *time.Timer
+	timer = time.AfterFunc(100*time.Millisecond, func() {
+		defer p.saveWorkers.Done()
 		p.prefLock.Lock()
+		if p.disconnected || p.saveTimer != timer {
+			p.prefLock.Unlock()
+			return
+		}
+		p.saveTimer = nil
 		p.savedRecently = false
 		changedDuringSaving := p.changedDuringSaving
 		p.changedDuringSaving = false
@@ -58,7 +88,8 @@ func (p *preferences) resetSavedRecently() {
 		if changedDuringSaving {
 			p.save()
 		}
-	}()
+	})
+	p.saveTimer = timer
 }
 
 func (p *preferences) save() error {
@@ -66,7 +97,13 @@ func (p *preferences) save() error {
 }
 
 func (p *preferences) saveToFile(file granio.URI) error {
+	p.ioLock.Lock()
+	defer p.ioLock.Unlock()
 	p.prefLock.Lock()
+	if p.disconnected {
+		p.prefLock.Unlock()
+		return nil
+	}
 	p.savedRecently = true
 	p.prefLock.Unlock()
 	defer p.resetSavedRecently()
@@ -88,8 +125,11 @@ func (p *preferences) saveToFile(file granio.URI) error {
 		err = encode.Encode(&values)
 	})
 
-	write.Close()
-	return err
+	closeErr := write.Close()
+	if err != nil {
+		return err
+	}
+	return closeErr
 }
 
 func (p *preferences) load() {
@@ -100,28 +140,40 @@ func (p *preferences) load() {
 }
 
 func (p *preferences) loadFromFile(path granio.URI) (err error) {
+	p.ioLock.Lock()
+	p.prefLock.RLock()
+	disconnected := p.disconnected
+	p.prefLock.RUnlock()
+	if disconnected {
+		p.ioLock.Unlock()
+		return nil
+	}
 	read, err := storage.Reader(path)
+	if err != nil {
+		p.ioLock.Unlock()
+		return err
+	}
+	decode := json.NewDecoder(read)
+	values := make(map[string]interface{})
+	err = decode.Decode(&values)
+	closeErr := read.Close()
+	p.ioLock.Unlock()
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if r := read.Close(); r != nil && err == nil {
-			err = r
-		}
-	}()
-	decode := json.NewDecoder(read)
+	if closeErr != nil {
+		return closeErr
+	}
+	convertLists(values)
 
 	p.prefLock.Lock()
 	p.loadingInProgress = true
 	p.prefLock.Unlock()
 
-	p.InMemoryPreferences.WriteValues(func(values map[string]interface{}) {
-		err = decode.Decode(&values)
-		if err != nil {
-			return
-		}
-		convertLists(values)
-	})
+	p.InMemoryPreferences.lock.Lock()
+	p.InMemoryPreferences.values = values
+	p.InMemoryPreferences.lock.Unlock()
+	p.InMemoryPreferences.fireChange()
 
 	p.prefLock.Lock()
 	p.loadingInProgress = false

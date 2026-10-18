@@ -4,48 +4,48 @@
 //
 // A simple usage where an app uses AWS for cloud provision may look like this:
 //
-//   package main
+//	package main
 //
-//   import (
-//   	"github.com/Uzer007-admin/granio-cloud/provider/aws"
-//   	"github.com/Uzer007-admin/granio/v2/app"
-//   	"github.com/Uzer007-admin/granio/v2/widget"
-//   )
+//	import (
+//		"github.com/Uzer007-admin/granio-x/cloud/provider/aws"
+//		"github.com/Uzer007-admin/granio/v2/app"
+//		"github.com/Uzer007-admin/granio/v2/widget"
+//	)
 //
-//   func main() {
-//   	a := app.New()
-//   	a.SetCloudProvider(aws.NewProvider()) // if aws provider existed ;)
-//   	w := a.NewWindow("Cloud")
+//	func main() {
+//		a := app.New()
+//		a.SetCloudProvider(aws.NewProvider()) // if aws provider existed ;)
+//		w := a.NewWindow("Cloud")
 //
-//   	w.SetContent(widget.NewLabel("Add content here"))
-//   	w.ShowAndRun()
-//   }
+//		w.SetContent(widget.NewLabel("Add content here"))
+//		w.ShowAndRun()
+//	}
 //
 // Alternatively to allow the user to choose a cloud provider for their storage etc use:
 //
-//   package main
+//	package main
 //
-//   import (
-//   	"github.com/Uzer007-admin/granio-cloud"
-//   	"github.com/Uzer007-admin/granio/v2/app"
-//   	"github.com/Uzer007-admin/granio/v2/widget"
-//   )
+//	import (
+//		"github.com/Uzer007-admin/granio-x/cloud"
+//		"github.com/Uzer007-admin/granio/v2/app"
+//		"github.com/Uzer007-admin/granio/v2/widget"
+//	)
 //
-//   func main() {
-//   	a := app.New()
-//   	cloud.Enable(a)
-//   	w := a.NewWindow("Cloud")
+//	func main() {
+//		a := app.New()
+//		cloud.Enable(a)
+//		w := a.NewWindow("Cloud")
 //
-//   	w.SetContent(widget.NewButton("Choose cloud provider", func() {
-//   		cloud.ShowSettings(a, w)
-//   	}))
-//   	w.ShowAndRun()
-//   }
-package cloud // import "github.com/Uzer007-admin/granio-cloud"
+//		w.SetContent(widget.NewButton("Choose cloud provider", func() {
+//			cloud.ShowSettings(a, w)
+//		}))
+//		w.ShowAndRun()
+//	}
+package cloud // import "github.com/Uzer007-admin/granio-x/cloud"
 
 import (
-	"github.com/Uzer007-admin/granio-cloud/internal/settings"
-	"github.com/Uzer007-admin/granio-cloud/provider/dropbox"
+	"github.com/Uzer007-admin/granio-x/cloud/internal/settings"
+	"github.com/Uzer007-admin/granio-x/cloud/provider/dropbox"
 	"github.com/Uzer007-admin/granio/v2"
 )
 

@@ -34,14 +34,16 @@ func ensureDirExists(dir string) {
 	}
 }
 
-func watchFile(path string, callback func()) *fsnotify.Watcher {
+func watchFile(path string, callback func()) (func(), <-chan struct{}) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		granio.LogError("Failed to watch settings file:", err)
-		return nil
+		return nil, nil
 	}
+	done := make(chan struct{})
 
 	go func() {
+		defer close(done)
 		for event := range watcher.Events {
 			if event.Op&fsnotify.Remove != 0 { // if it was deleted then watch again
 				watcher.Remove(path) // fsnotify returns false positives, see https://github.com/fsnotify/fsnotify/issues/268
@@ -52,12 +54,8 @@ func watchFile(path string, callback func()) *fsnotify.Watcher {
 			}
 		}
 
-		err = watcher.Close()
-		if err != nil {
-			granio.LogError("Settings un-watch error:", err)
-		}
 	}()
 
 	watchFileAddTarget(watcher, path)
-	return watcher
+	return func() { _ = watcher.Close() }, done
 }

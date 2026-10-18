@@ -1,0 +1,46 @@
+name: Platform Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+
+jobs:
+  platform_tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ['', 'stable']
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+        go-version-file: 'go.mod'
+
+    - name: Get dependencies
+      run: >-
+        sudo apt-get update &&
+        sudo apt-get install
+        bc
+        gcc
+        libgl1-mesa-dev
+        libwayland-dev
+        libx11-dev
+        libxkbcommon-dev
+        xorg-dev
+      if: ${{ runner.os == 'Linux' }}
+
+    # Recent macOS (Tahoe/26) requires an LC_UUID load command, which Go's
+    # internal linker does not emit on older Go versions. Force external
+    # linking so the test binaries get an LC_UUID and don't abort trap with
+    # "missing LC_UUID load command". See golang/go#69987 and #78012.
+    - name: Set macOS linker flag (LC_UUID workaround)
+      run: echo "TESTLDFLAGS=-ldflags=-linkmode=external" >> $GITHUB_ENV
+      if: ${{ runner.os == 'macOS' && matrix.go-version == '' }}
+
+    - name: Tests
+      run: go test -tags ci ${{ env.TESTLDFLAGS }} ./...

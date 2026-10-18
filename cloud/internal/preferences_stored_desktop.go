@@ -6,9 +6,9 @@
 package internal
 
 func (p *preferences) watch() {
-	watchFile(p.file.Path(), func() {
+	p.stopWatching, p.watchDone = watchFile(p.file.Path(), func() {
 		p.prefLock.RLock()
-		shouldIgnoreChange := p.savedRecently
+		shouldIgnoreChange := p.savedRecently || p.disconnected
 		p.prefLock.RUnlock()
 		if shouldIgnoreChange {
 			return

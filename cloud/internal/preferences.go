@@ -63,7 +63,9 @@ func (p *InMemoryPreferences) BoolWithFallback(key string, fallback bool) bool {
 
 // ChangeListeners returns the list of listeners registered for this set of preferences.
 func (p *InMemoryPreferences) ChangeListeners() []func() {
-	return p.changeListeners
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+	return append([]func(){}, p.changeListeners...)
 }
 
 // Float looks up a float64 value for the key
@@ -259,9 +261,7 @@ func NewInMemoryPreferences() *InMemoryPreferences {
 }
 
 func (p *InMemoryPreferences) fireChange() {
-	p.lock.RLock()
-	listeners := p.changeListeners
-	p.lock.RUnlock()
+	listeners := p.ChangeListeners()
 
 	var wg sync.WaitGroup
 

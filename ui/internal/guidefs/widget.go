@@ -1,4 +1,4 @@
-//go:generate fyne bundle -o bundled.go -package guidefs ../../assets
+//go:generate granio bundle -o bundled.go -package guidefs ../../assets
 
 package guidefs
 
@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Uzer007-admin/granio-ui/internal/tools"
+	"github.com/Uzer007-admin/granio-x/ui/internal/tools"
 	"github.com/Uzer007-admin/granio/v2"
 	"github.com/Uzer007-admin/granio/v2/container"
 	"github.com/Uzer007-admin/granio/v2/dialog"

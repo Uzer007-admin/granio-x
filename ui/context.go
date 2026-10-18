@@ -4,7 +4,7 @@ import (
 	"github.com/Uzer007-admin/granio/v2"
 	"github.com/Uzer007-admin/granio/v2/theme"
 
-	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
+	"github.com/Uzer007-admin/granio-x/ui/internal/guidefs"
 )
 
 // Context defines a graphical builder context that contains metadata and theme information.

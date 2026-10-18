@@ -8,10 +8,11 @@ import (
 	"os/exec"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 
-	widget2 "github.com/Uzer007-admin/granio-terminal/internal/widget"
+	widget2 "github.com/Uzer007-admin/granio-x/terminal/internal/widget"
 
 	"github.com/Uzer007-admin/granio/v2"
 	"github.com/Uzer007-admin/granio/v2/canvas"
@@ -100,6 +101,7 @@ type Terminal struct {
 	printData              []byte
 	printer                Printer
 	cmd                    *exec.Cmd
+	exitStatus             atomic.Int32  // process exit code + 1; zero means not exited
 	dirWatchDone           chan struct{} // closed to stop checking the working directory of cmd
 	closeLock              sync.Mutex
 	connected, stopping    bool
@@ -304,10 +306,7 @@ func (t *Terminal) Text() string {
 // Returns -1 if called before shell was started or before shell exited.
 // Also returns -1 if shell was terminated by a signal.
 func (t *Terminal) ExitCode() int {
-	if t.cmd == nil {
-		return -1
-	}
-	return t.cmd.ProcessState.ExitCode()
+	return int(t.exitStatus.Load()) - 1
 }
 
 // TouchCancel handles the tap action for mobile apps that lose focus during tap.
@@ -359,13 +358,14 @@ func (t *Terminal) open() error {
 		return err
 	}
 
-	t.in, t.out = in, out
 	if t.readWriterConfigurator != nil {
-		t.out, t.in = t.readWriterConfigurator.SetupReadWriter(out, in)
+		out, in = t.readWriterConfigurator.SetupReadWriter(out, in)
 	}
-
+	t.closeLock.Lock()
+	t.in, t.out = in, out
 	t.pty = pty
-	t.setConnected()
+	t.connected = true
+	t.closeLock.Unlock()
 
 	t.updatePTYSize()
 	return nil
@@ -447,6 +447,9 @@ func (t *Terminal) run() {
 			if t.cmd != nil {
 				// wait for cmd (shell) to exit, populates ProcessState.ExitCode
 				_ = t.cmd.Wait()
+				if t.cmd.ProcessState != nil {
+					t.exitStatus.Store(int32(t.cmd.ProcessState.ExitCode() + 1))
+				}
 			}
 			if err == io.EOF || err.Error() == "EOF" {
 				break // term exit on macOS
@@ -512,11 +515,13 @@ func (t *Terminal) RunWithConnection(in io.WriteCloser, out io.Reader) error {
 		}
 		time.Sleep(time.Millisecond * 50)
 	}
-	t.in, t.out = in, out
 	if t.readWriterConfigurator != nil {
-		t.out, t.in = t.readWriterConfigurator.SetupReadWriter(out, in)
+		out, in = t.readWriterConfigurator.SetupReadWriter(out, in)
 	}
-	t.setConnected()
+	t.closeLock.Lock()
+	t.in, t.out = in, out
+	t.connected = true
+	t.closeLock.Unlock()
 	if t.isStopping() { // closed whilst we were connecting
 		return t.close()
 	}
@@ -529,11 +534,15 @@ func (t *Terminal) RunWithConnection(in io.WriteCloser, out io.Reader) error {
 // Write is used to send commands into an open terminal connection.
 // Errors will be returned if the connection is not established, has closed, or there was a problem in transmission.
 func (t *Terminal) Write(b []byte) (int, error) {
-	if t.in == nil {
+	t.closeLock.Lock()
+	in := t.in
+	connected := t.connected
+	t.closeLock.Unlock()
+	if in == nil || !connected {
 		return 0, io.EOF
 	}
 
-	return t.in.Write(b)
+	return in.Write(b)
 }
 
 func (t *Terminal) setupShortcuts() {

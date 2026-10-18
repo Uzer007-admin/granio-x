@@ -3,7 +3,7 @@ package refyne
 import (
 	"github.com/Uzer007-admin/granio/v2"
 
-	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
+	"github.com/Uzer007-admin/granio-x/ui/internal/guidefs"
 )
 
 // WidgetInfo contains the name and corresponding functions for the widget type

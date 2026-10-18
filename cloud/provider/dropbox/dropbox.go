@@ -1,4 +1,4 @@
-//go:generate fyne bundle -o bundled.go -package dropbox Dropbox.svg
+//go:generate granio bundle -o bundled.go -package dropbox Dropbox.svg
 
 package dropbox
 
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Uzer007-admin/granio-cloud/internal/settings"
+	"github.com/Uzer007-admin/granio-x/cloud/internal/settings"
 	"github.com/Uzer007-admin/granio/v2"
 	"github.com/Uzer007-admin/granio/v2/dialog"
 	"github.com/Uzer007-admin/granio/v2/storage"

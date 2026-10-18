@@ -11,7 +11,7 @@ import (
 	_ "github.com/Uzer007-admin/granio/v2/test"
 	"github.com/Uzer007-admin/granio/v2/widget"
 
-	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
+	"github.com/Uzer007-admin/granio-x/ui/internal/guidefs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,11 +29,13 @@ const labelJSON = `{
       "Monospace": false,
       "Symbol": false,
       "TabWidth": 0,
-      "Underline": false
+      "Underline": false,
+      "Strikethrough": false
     },
     "Truncation": 0,
     "Importance": 0,
     "SizeName": "",
+    "TextRole": 0,
     "Selectable": false
   }
 }`

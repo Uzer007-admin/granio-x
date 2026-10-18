@@ -3,9 +3,12 @@ module github.com/Uzer007-admin/granio-x
 go 1.27.1
 
 require (
+	github.com/ActiveState/termtest/conpty v0.5.0
 	github.com/Andrew-M-C/go.jsonvalue v1.4.1
-	github.com/Uzer007-admin/granio/v2 v2.8.2-0.20261018000600-86cc66cfefa1
+	github.com/Uzer007-admin/granio/v2 v2.8.2-0.20261018062539-44c3df9361e7
+	github.com/creack/pty v1.1.21
 	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
@@ -13,23 +16,24 @@ require (
 	github.com/twpayne/go-geom v1.0.0
 	github.com/wagslane/go-password-validator v0.3.0
 	golang.org/x/image v0.47.0
+	golang.org/x/sys v0.49.0
 	golang.org/x/text v0.43.0
 )
 
 require (
+	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/Uzer007-admin/dbus/v5 v5.3.0 // indirect
 	github.com/Uzer007-admin/gl v0.0.0-20261017234122-3756695c6558 // indirect
 	github.com/Uzer007-admin/glfw/v3.4/glfw v0.1.0-pre.2.0.20261017234256-57a5925f8166 // indirect
 	github.com/Uzer007-admin/glfw/v3.5/glfw v0.0.0-20261017234256-57a5925f8166 // indirect
-	github.com/Uzer007-admin/granio-gl-js v0.2.1-0.20261017234923-9e3b07127717 // indirect
-	github.com/Uzer007-admin/granio-glfw-js v0.4.1-0.20261017234950-9e15a5515cc9 // indirect
-	github.com/Uzer007-admin/granio-image v0.1.2-0.20261017234830-b1607a79c1eb // indirect
-	github.com/Uzer007-admin/granio-oksvg v0.2.1-0.20261017234852-ddb3049db67c // indirect
-	github.com/Uzer007-admin/granio-systray v1.12.3-0.20261017235015-fd45fbf4dbbd // indirect
+	github.com/Uzer007-admin/granio/deps/gl-js v0.0.0-20261018062049-d56bde3dff7f // indirect
+	github.com/Uzer007-admin/granio/deps/glfw-js v0.0.0-20261018062049-d56bde3dff7f // indirect
+	github.com/Uzer007-admin/granio/deps/image v0.0.0-20261018062049-d56bde3dff7f // indirect
+	github.com/Uzer007-admin/granio/deps/oksvg v0.0.0-20261018062049-d56bde3dff7f // indirect
+	github.com/Uzer007-admin/granio/deps/systray v0.0.0-20261018062049-d56bde3dff7f // indirect
 	github.com/anthonynsimon/bild v0.17.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
-	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/go-text/render v0.2.1 // indirect
 	github.com/go-text/typesetting v0.3.5 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
@@ -44,5 +48,4 @@ require (
 	github.com/yuin/goldmark v1.8.6 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/net v0.61.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
 )

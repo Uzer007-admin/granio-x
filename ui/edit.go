@@ -8,7 +8,7 @@ import (
 	"github.com/Uzer007-admin/granio/v2/data/binding"
 	"github.com/Uzer007-admin/granio/v2/widget"
 
-	"github.com/Uzer007-admin/granio-ui/internal/guidefs"
+	"github.com/Uzer007-admin/granio-x/ui/internal/guidefs"
 )
 
 // CreateNew returns a new instance of the given widget type

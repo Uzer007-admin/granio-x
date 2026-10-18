@@ -8,7 +8,7 @@ import (
 	"github.com/Uzer007-admin/granio/v2/container"
 	"github.com/Uzer007-admin/granio/v2/widget"
 
-	"github.com/Uzer007-admin/granio-ui/internal/tools"
+	"github.com/Uzer007-admin/granio-x/ui/internal/tools"
 	"github.com/stretchr/testify/assert"
 )
 

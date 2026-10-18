@@ -3,7 +3,7 @@ package cloud
 import (
 	"fmt"
 
-	"github.com/Uzer007-admin/granio-cloud/internal/settings"
+	"github.com/Uzer007-admin/granio-x/cloud/internal/settings"
 	"github.com/Uzer007-admin/granio/v2"
 	"github.com/Uzer007-admin/granio/v2/container"
 	"github.com/Uzer007-admin/granio/v2/dialog"

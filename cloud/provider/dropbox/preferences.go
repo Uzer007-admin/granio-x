@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Uzer007-admin/granio-cloud/internal"
+	"github.com/Uzer007-admin/granio-x/cloud/internal"
 	"github.com/Uzer007-admin/granio/v2"
 	"github.com/Uzer007-admin/granio/v2/storage"
 )

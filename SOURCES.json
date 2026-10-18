@@ -1,0 +1,58 @@
+{
+  "base_source": "https://github.com/fyne-io/fyne-x",
+  "sources": [
+    {
+      "source": "https://github.com/fyne-io/terminal",
+      "prepared_commit": "574c4ff0f8e6c69c4abfe184a1393bd42720ac20",
+      "path": "terminal",
+      "history_merged": true,
+      "previous_repository": "https://github.com/Uzer007-admin/granio-terminal",
+      "previous_repository_deleted": false,
+      "module": "github.com/Uzer007-admin/granio-x/terminal",
+      "separate_module": false,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "source": "https://github.com/fyne-io/refyne",
+      "prepared_commit": "c66cdcecc0d58a5b58b32e3c0b81dfe3dbfbc205",
+      "path": "ui",
+      "history_merged": true,
+      "previous_repository": "https://github.com/Uzer007-admin/granio-ui",
+      "previous_repository_deleted": false,
+      "module": "github.com/Uzer007-admin/granio-x/ui",
+      "separate_module": false,
+      "license_files": [
+        "LICENSE",
+        "AUTHORS"
+      ]
+    },
+    {
+      "source": "https://github.com/fyne-io/cloud",
+      "prepared_commit": "3d634a4219c9164bfb605a423a3ba8b773c6ab2a",
+      "path": "cloud",
+      "history_merged": true,
+      "previous_repository": "https://github.com/Uzer007-admin/granio-cloud",
+      "previous_repository_deleted": false,
+      "module": "github.com/Uzer007-admin/granio-x/cloud",
+      "separate_module": false,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "source": "https://github.com/fyne-io/go-locale",
+      "prepared_commit": "f28f8175f09fceba681537562ed44ecbcbe0d2a3",
+      "path": "locale",
+      "history_merged": true,
+      "previous_repository": "https://github.com/Uzer007-admin/granio-locale",
+      "previous_repository_deleted": false,
+      "module": "github.com/Uzer007-admin/granio-x/locale",
+      "separate_module": false,
+      "license_files": [
+        "LICENSE"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 package cloud
 
 import (
-	"github.com/Uzer007-admin/granio-cloud/internal/settings"
+	"github.com/Uzer007-admin/granio-x/cloud/internal/settings"
 	"github.com/Uzer007-admin/granio/v2"
 )
 

@@ -241,3 +241,15 @@ func TestPrefs_SetSameSliceValue(t *testing.T) {
 
 	assert.Equal(t, 2, called)
 }
+
+func TestChangeListenersReturnsSnapshot(t *testing.T) {
+	p := NewInMemoryPreferences()
+	called := 0
+	p.AddChangeListener(func() { called++ })
+	snapshot := p.ChangeListeners()
+	snapshot[0] = func() {
+		t.Error("изменённый снимок не должен заменять обработчик")
+	}
+	p.SetString("key", "value")
+	assert.Equal(t, 1, called)
+}

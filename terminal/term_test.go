@@ -1,8 +1,8 @@
 package terminal
 
 import (
-	"errors"
 	"fmt"
+	"runtime"
 	"testing"
 	"time"
 
@@ -42,21 +42,33 @@ func TestExitCode(t *testing.T) {
 }
 
 func testExitCodeN(t *testing.T, n int) {
+	t.Helper()
 	term := New()
 	term.Resize(granio.NewSize(45, 45))
-	go func() {
-		_ = term.RunLocalShell()
-	}()
-	err := errors.New("NotYet")
-	for err != nil {
-		time.Sleep(50 * time.Millisecond)
-		_, err = fmt.Fprintf(term, "exit %d\n", n)
+	t.Cleanup(term.Close)
+	done := make(chan error, 1)
+	go func() { done <- term.RunLocalShell() }()
+	newline := "\n"
+	if runtime.GOOS == "windows" {
+		newline = "\r"
 	}
-	for term.ExitCode() == -1 {
-		time.Sleep(50 * time.Millisecond)
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		if _, err := fmt.Fprintf(term, "exit %d%s", n, newline); err == nil {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("оболочка не открыла канал ввода")
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
-
-	assert.Equal(t, n, term.ExitCode())
+	select {
+	case err := <-done:
+		assert.NoError(t, err)
+	case <-time.After(10 * time.Second):
+		t.Fatal("оболочка не завершилась")
+	}
+	assert.Eventually(t, func() bool { return term.ExitCode() == n }, time.Second, 10*time.Millisecond)
 }
 
 func TestExitCode01(t *testing.T) {

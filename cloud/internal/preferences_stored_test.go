@@ -5,22 +5,41 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/Uzer007-admin/granio/v2"
 	"github.com/Uzer007-admin/granio/v2/storage"
 	"github.com/Uzer007-admin/granio/v2/test"
 	"github.com/stretchr/testify/assert"
 )
 
-func loadPreferences() *preferences {
-	uri := storage.NewFileURI(filepath.Join("testdata", "dummy.json"))
-	p := NewPreferences(test.NewApp(), uri)
-	p.load()
+func loadPreferences(t *testing.T) *preferences {
+	t.Helper()
+	content, err := os.ReadFile(filepath.Join("testdata", "dummy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	filename := filepath.Join(t.TempDir(), "preferences.json")
+	if err = os.WriteFile(filename, content, 0600); err != nil {
+		t.Fatal(err)
+	}
+	return openTestPreferences(t, storage.NewFileURI(filename))
+}
 
+func openTestPreferences(t *testing.T, uri granio.URI) *preferences {
+	t.Helper()
+	p := NewPreferences(test.NewApp(), uri)
+	t.Cleanup(func() {
+		p.Disconnect()
+		if p.watchDone != nil {
+			<-p.watchDone
+		}
+	})
 	return p
 }
 
 func TestPreferences_Remove(t *testing.T) {
-	p := loadPreferences()
+	p := loadPreferences(t)
 	p.WriteValues(func(val map[string]interface{}) {
 		val["keyString"] = "value"
 		val["keyInt"] = 4
@@ -31,13 +50,17 @@ func TestPreferences_Remove(t *testing.T) {
 	assert.Nil(t, err)
 
 	// check it doesn't write values that were removed
-	p = loadPreferences()
+	p.Disconnect()
+	if p.watchDone != nil {
+		<-p.watchDone
+	}
+	p = openTestPreferences(t, p.file)
 	assert.Equal(t, 4, p.Int("keyInt"))
 	assert.Equal(t, "missing", p.StringWithFallback("keyString", "missing"))
 }
 
 func TestPreferences_Save(t *testing.T) {
-	p := loadPreferences()
+	p := loadPreferences(t)
 	p.WriteValues(func(val map[string]interface{}) {
 		val["keyString"] = "value"
 		val["keyStringList"] = []string{"1", "2", "3"}
@@ -49,7 +72,7 @@ func TestPreferences_Save(t *testing.T) {
 		val["keyBoolList"] = []bool{true, false, true}
 	})
 
-	path := filepath.Join(os.TempDir(), "fynePrefs.json")
+	path := filepath.Join(t.TempDir(), "preferences.json")
 	defer os.Remove(path)
 	err := p.saveToFile(storage.NewFileURI(path))
 	assert.Nil(t, err)
@@ -65,18 +88,22 @@ func TestPreferences_Save(t *testing.T) {
 	assert.JSONEq(t, string(expected), string(content))
 
 	// check it reads the saved output
-	p = loadPreferences()
+	p.Disconnect()
+	if p.watchDone != nil {
+		<-p.watchDone
+	}
+	p = openTestPreferences(t, p.file)
 	assert.Equal(t, "value", p.String("keyString"))
 	assert.Equal(t, 3, len(p.StringList("keyStringList")))
 }
 
 func TestPreferences_Save_OverwriteFast(t *testing.T) {
-	p := loadPreferences()
+	p := loadPreferences(t)
 	p.WriteValues(func(val map[string]interface{}) {
 		val["key"] = "value"
 	})
 
-	path := filepath.Join(os.TempDir(), "fynePrefs2.json")
+	path := filepath.Join(t.TempDir(), "preferences.json")
 	defer os.Remove(path)
 	p.saveToFile(storage.NewFileURI(path))
 
@@ -85,14 +112,14 @@ func TestPreferences_Save_OverwriteFast(t *testing.T) {
 	})
 	p.saveToFile(storage.NewFileURI(path))
 
-	p2 := loadPreferences()
+	p2 := loadPreferences(t)
 	p2.loadFromFile(storage.NewFileURI(path))
 	assert.Equal(t, "value2", p2.String("key2"))
 }
 
 func TestPreferences_Load(t *testing.T) {
-	p := loadPreferences()
-	path := filepath.Join("testdata", "preferences.json")
+	p := loadPreferences(t)
+	path := filepath.Join("testdata", "dummy.json")
 	p.loadFromFile(storage.NewFileURI(path))
 
 	assert.Equal(t, "value", p.String("keyString"))
@@ -103,4 +130,28 @@ func TestPreferences_Load(t *testing.T) {
 	assert.Equal(t, []float64{1.1, 2.2, 3.3}, p.FloatList("keyFloatList"))
 	assert.Equal(t, true, p.Bool("keyBool"))
 	assert.Equal(t, []bool{true, false, true}, p.BoolList("keyBoolList"))
+}
+
+func TestPreferencesDisconnectStopsPendingSave(t *testing.T) {
+	p := loadPreferences(t)
+	p.SetString("first", "saved")
+	p.SetString("second", "pending")
+	p.Disconnect()
+	if p.watchDone != nil {
+		<-p.watchDone
+	}
+	before, err := os.ReadFile(p.file.Path())
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.SetString("third", "ignored")
+	time.Sleep(150 * time.Millisecond)
+	after, err := os.ReadFile(p.file.Path())
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, before, after)
+	p.prefLock.RLock()
+	assert.Nil(t, p.saveTimer)
+	p.prefLock.RUnlock()
 }
